@@ -64,9 +64,14 @@ async def on_reaction_remove(reaction, user):
 async def embed(result):
 	return discord.Embed(
 		title=result['title'],
-		description=result['excerpt'],
-		color=0xffff00,
-		url='https://developer.mozilla.org/en-US/'+result['slug']
+		url='https://developer.mozilla.org/en-US/'+result['slug'],
+		description=re.sub(
+			r'<(|/)mark>',
+			'',
+			result['excerpt']
+		),
+		footer='⬇️ flip through results ⬇️',
+		color=0xffff00
 	).set_author(
 		name='ᴍᴅɴ',
 		url='https://developer.mozilla.org/en-US',

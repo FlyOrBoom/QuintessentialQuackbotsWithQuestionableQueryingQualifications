@@ -4,8 +4,6 @@ load_dotenv()
 import os
 import discord
 import requests
-import re
-import textwrap
 
 mdn='https://developer.mozilla.org/'
 client = discord.Client(
@@ -33,19 +31,11 @@ async def on_ready():
 @client.event
 async def on_message(message):
 
-	match = re.match(
-		'.mdn(|css|canvas|html|http|js|svg|webdev|standards|webext|webgl)\s(.*)',
-		message.content
-	)
-
-	if match:
+	if message.content.startswith('.q '):
 		async with message.channel.typing():
 			documents = requests.get(
-				f"{mdn}api/v1/search/en-US?q={match.group(0)}&topic={match.group(1)}"
+				f"{mdn}api/v1/search/en-US?q={message.content[3:]}&highlight=false"
 			).json()['documents']
-
-			for document in documents:
-				document['url']=f"{mdn}en-US/docs/{document['slug']}"
 
 			reply = await message.channel.send(
 				embed = await embed(documents[0])
@@ -80,15 +70,8 @@ async def on_reaction_add(new_reaction, user):
 async def embed(document):
 	return discord.Embed(
 		title=document['title'],
-		url=document['url'],
-		description=(
-			re.sub(r"<.+?>",'',
-			re.sub(r"<\/?pre>",'```',
-			re.sub(r"<\/?code>",'`',
-			re.sub(r"<\/?em>",'*',
-			re.sub(r"<\/?strong>",'**',
-			requests.get(f"{document['url']}?summary&raw").text
-		)))))),
+		url=f"{mdn}en-US/docs/{document['slug']}",
+		description=document['excerpt'],
 		color=0x83d0f2
 	).set_author(
 		name='ᴍᴅɴ',

@@ -80,7 +80,7 @@ async def embed(result):
 			textwrap.shorten(result['excerpt'],width=256,placeholder='..').capitalize()+'.'
 		),
 		footer='⬇️ flip through results ⬇️',
-		color=0xffff00
+		color=0x83d0f2
 	).set_author(
 		name='ᴍᴅɴ',
 		url='https://developer.mozilla.org/en-US',

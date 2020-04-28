@@ -64,7 +64,13 @@ async def on_reaction_remove(reaction, user):
 async def embed(result):
 	return discord.Embed(
 		title=result['title'],
-		description=result['excerpt']
+		description=result['excerpt'],
+		color=0xffff00,
+		url='https://developer.mozilla.org/en-US/'+result['slug']
+	).set_author(
+		name='ᴍᴅɴ',
+		url='https://developer.mozilla.org/en-US',
+		icon_url='https://developer.mozilla.org/static/img/favicon32.7f3da72dcea1.png'
 	)
 
 async def react(reaction,user):

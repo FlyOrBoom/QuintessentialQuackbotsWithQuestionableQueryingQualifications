@@ -5,6 +5,7 @@ import os
 import discord
 import requests
 import re
+import textwrap
 
 client = discord.Client()
 active_ids = []
@@ -55,11 +56,19 @@ async def on_message(message):
 
 @client.event
 async def on_reaction_add(reaction, user):
-	await react(reaction,user)
-
-@client.event
-async def on_reaction_remove(reaction, user):
-	await react(reaction,user)
+	if (user != client.user
+		and new_reaction.message.id in active_ids
+		and new_reaction.emoji in digits):
+		await new_reaction.message.edit(
+			embed = await embed(
+				active_results[active_ids.index(new_reaction.message.id)][digits.index(new_reaction.emoji)]
+			)
+		)
+		for reaction in new_reaction.message.reactions:
+			if reaction != new_reaction:
+				async for user in reaction.users():
+					if user != client.user:
+						await reaction.remove(user)
 
 async def embed(result):
 	return discord.Embed(
@@ -68,7 +77,7 @@ async def embed(result):
 		description=re.sub(
 			r'<(|/)mark>',
 			'',
-			result['excerpt']
+			textwrap.shorten(result['excerpt'],width=256,placeholder='..').capitalize()+'.'
 		),
 		footer='⬇️ flip through results ⬇️',
 		color=0xffff00
@@ -77,15 +86,5 @@ async def embed(result):
 		url='https://developer.mozilla.org/en-US',
 		icon_url='https://developer.mozilla.org/static/img/favicon32.7f3da72dcea1.png'
 	)
-
-async def react(reaction,user):
-	if (user != client.user
-		and reaction.message.id in active_ids
-		and reaction.emoji in digits):
-		await reaction.message.edit(
-			embed = await embed(
-				active_results[active_ids.index(reaction.message.id)][digits.index(reaction.emoji)]
-			)
-		)
 
 client.run(os.environ['TOKEN'])

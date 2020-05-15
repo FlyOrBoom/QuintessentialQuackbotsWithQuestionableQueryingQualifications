@@ -15,7 +15,7 @@ async def on_ready():
 @client.event
 async def on_message(message):
 	params = message.content.split(' ',1)
-	if params[0].lower() in ['.m','.mdn']:
+	if len(params) == 2 and ( params[0].lower() in ['.m','.mdn'] ):
 		async with message.channel.typing():
 			documents = requests.get(
 				mdn + 'api/v1/search/en-US?highlight=false&q=' + params[1]
@@ -23,6 +23,7 @@ async def on_message(message):
 			reply = await message.channel.send(
 				embed = await embed(documents[0])
 			)
+
 		for digit in digits:
 			await reply.add_reaction(digit)
 		active_ids.append(reply.id)

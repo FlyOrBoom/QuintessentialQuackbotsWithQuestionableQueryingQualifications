@@ -63,6 +63,7 @@ async def handle_emails():
 					)
 				)
 			)
+
 			email_subject = 'hello'
 
 			subject = re.search(
@@ -73,20 +74,19 @@ async def handle_emails():
 			cut = re.search(
 				r'text\/plain.*?,.{4}(.*?).{4}OPEN',
 				full
-			).group(1).split(r'\r\n')
+			).group(1).split(
+				r'\r\n'
+			)
 
+			print(cut)
 			teacher = cut[0].split(' posted ')[0]
-			classname = cut[0].split(' in ')[1][0:-1]
-			duedate = cut[3].replace(':','')
-			comment = cut[-1]
-
-			#url = re.search(
-			#	r',\\r\\n(.*?)posted',
-			#	full
-			#).group(1)
+			classname = cut[0].split(' in ')[1][:-0]
+			url = cut[1][1:-2]
+			duedate = 'duedate'
+			comment = ' '.join(cut[4:])
 			
-			url = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
 			print(teacher,classname,duedate,comment)
+			
 			embed = discord.Embed(
 				color = 0x11aa77,
 				title = '📪 '+subject,

@@ -5,15 +5,19 @@ from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 
-import html
 import base64
+import quopri
+import html
+import re
 
 import os,asyncio,json,discord
 from dotenv import load_dotenv
 load_dotenv()
 
 bot = discord.Client()
-email_record = []
+email_record_file = open('email_record.txt')
+email_record = email_record_file.read().split(',')
+email_record_file.close()
 
 def get_gmail_creds():
 
@@ -51,14 +55,47 @@ async def handle_emails():
 		emails = get_emails()
 		print(len(emails),'new emails.')
 		for email in emails:
-			email_subject=list(filter(
-				lambda header:header['name']=='Subject',				
-				email['payload']['headers']
-			))[0]['value']
+
+			full = str(
+				quopri.decodestring(
+					base64.urlsafe_b64decode(
+						email['raw'].encode('ASCII')
+					)
+				)
+			)
+			email_subject = 'hello'
+
+			subject = re.search(
+				r'Subject:(.*?)\\r',
+				full
+			).group(1)
+			
+			cut = re.search(
+				r'text\/plain.*?,.{4}(.*?).{4}OPEN',
+				full
+			).group(1).split(r'\r\n')
+
+			teacher = cut[0].split(' posted ')[0]
+			classname = cut[0].split(' in ')[1][0:-1]
+			duedate = cut[3].replace(':','')
+			comment = cut[-1]
+
+			#url = re.search(
+			#	r',\\r\\n(.*?)posted',
+			#	full
+			#).group(1)
+			
+			url = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+			print(teacher,classname,duedate,comment)
 			embed = discord.Embed(
-				color=0x204030,
-				title='📪 '+email_subject,
-				description=html.unescape(email['snippet'])
+				color = 0x11aa77,
+				title = '📪 '+subject,
+				description = f'{comment}\n**({duedate})**',
+				url = url
+			).set_author(
+				name = classname
+			).set_footer(
+				text = teacher
 			)
 			channels = (
 				bot.get_channel(int(channel_id))
@@ -71,7 +108,10 @@ async def handle_emails():
 
 			email_record.append(email['id'])
 
-		
+		email_record_file = open('email_record.txt','w')
+		email_record_file.write(','.join(email_record))
+		email_record_file.close()
+
 		await asyncio.sleep(60)
 
 def get_emails():
@@ -92,7 +132,8 @@ def get_emails():
 	emails = list(
 		gmail.users().messages().get(
 			userId='me',
-			id=email_id
+			id=email_id,
+			format='raw'
 		).execute() for email_id in email_ids
 	)	
 	
@@ -101,5 +142,3 @@ def get_emails():
 gmail = build('gmail', 'v1', credentials=get_gmail_creds())
 bot.loop.create_task(handle_emails())
 bot.run(os.environ['TOKEN'])
-print('\033[45mLogging in...')
-

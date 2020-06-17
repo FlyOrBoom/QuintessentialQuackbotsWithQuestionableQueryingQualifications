@@ -6,8 +6,6 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 
 import base64
-import quopri
-import html
 import re
 
 import os,asyncio,json,discord
@@ -56,54 +54,52 @@ async def handle_emails():
 		print(len(emails),'new emails.')
 		for email in emails:
 
-			full = str(
-				quopri.decodestring(
+			content = re.search(
+				r'([\w ]+) posted a (\w+ \w+) in ([\w ]+)\n.*\n\n.*\n(?:Due: (.*?)\n(.*)\n)?((?:.|\n)*)\nOPEN(?: |\n)<(.*?)>\n.*\n',
+				str(
 					base64.urlsafe_b64decode(
-						email['raw'].encode('ASCII')
-					)
-				)
-			)
+						email['payload']['parts'][0]['body']['data']
+					).decode('utf-8')
+				).replace('\r','')
+			).groups()
 
-			email_subject = 'hello'
+			post = {
+				'teacher': content[0],
+				'type':	content[1].capitalize(),
+				'class': content[2],
+				'due': content[3],
+				'document': content[4],
+				'description': content[5].replace('\n',' '),
+				'url': content[6]
+			}
 
-			subject = re.search(
-				r'Subject:(.*?)\\r',
-				full
-			).group(1)
-			
-			cut = re.search(
-				r'text\/plain.*?,.{4}(.*?).{4}OPEN',
-				full
-			).group(1).split(
-				r'\r\n'
-			)
-
-			print(cut)
-			teacher = cut[0].split(' posted ')[0]
-			classname = cut[0].split(' in ')[1][:-0]
-			url = cut[1][1:-2]
-			duedate = 'duedate'
-			comment = ' '.join(cut[4:])
-			
-			print(teacher,classname,duedate,comment)
-			
+			print(post)
+	
 			embed = discord.Embed(
 				color = 0x11aa77,
-				title = '📪 '+subject,
-				description = f'{comment}\n**({duedate})**',
-				url = url
+				title = f'📪 '+post['type']+(': '+post['document'] if post['document'] else ''),
+				description = post['description'],
+				url = post['url']
 			).set_author(
-				name = classname
+				name = post['class']
 			).set_footer(
-				text = teacher
+				text = post['teacher']
 			)
+
+			if post['due']:
+				embed.add_field(
+					name = 'Due',
+					value = post['due'],
+					inline = False
+				)
+
 			channels = (
 				bot.get_channel(int(channel_id))
 				for channel_id
 				in os.environ['CHANNEL_IDS'].split(',')
 			)
 			for channel in channels:
-				print(f'🎉 \033[95mSent\033[0m {email["snippet"]} \033[95mto\033[0m {channel.id}')
+				print(f'🎉 \033[95mSent\033[0m {email["id"]} \033[95mto\033[0m {channel.id}')
 				await channel.send(embed=embed)
 
 			email_record.append(email['id'])
@@ -133,7 +129,7 @@ def get_emails():
 		gmail.users().messages().get(
 			userId='me',
 			id=email_id,
-			format='raw'
+			format='full'
 		).execute() for email_id in email_ids
 	)	
 	

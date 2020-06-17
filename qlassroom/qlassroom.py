@@ -7,6 +7,7 @@ from google.auth.transport.requests import Request
 import base64
 import re
 import datetime
+import random
 
 import os,asyncio,json,discord
 from dotenv import load_dotenv
@@ -17,9 +18,21 @@ email_record_file = open('email_record.txt')
 email_record = email_record_file.read().split(',')
 email_record_file.close()
 
-color = lambda x:f'\033[38:5:{x}m▮'
+wait_duration = 60
+email_query = 'from:(classroom.google.com) subject:New Google Classroom -comment newer_than:1d'
 
-def time():
+async def color_of(thing):
+	return ''.join(
+		map(
+			lambda x:f'\033[38:5:{x}m▮',
+			re.findall(
+				'..',
+				str(thing)
+			)
+		)
+	)
+
+async def time():
 	return f'\033[95m{str(datetime.datetime.now()).split(" ")[1].split(".")[0]}:\033[0m'
 	
 
@@ -54,7 +67,7 @@ async def handle_emails(email_record):
 
 	await bot.wait_until_ready()
 	print(
-		time(),
+		await time(),
 		'\033[92m',
 		f'Logged in as {str(bot.user)}'
 	)
@@ -62,7 +75,7 @@ async def handle_emails(email_record):
 	while True:
 
 		print(
-			time(),
+			await time(),
 			'\033[94m',
 			'Checking for new emails...',
 			end=''
@@ -71,7 +84,6 @@ async def handle_emails(email_record):
 		channel_ids = await fetch_channel_ids()
 
 		email_ids = await fetch_email_ids(
-			query = 'label:Qlassroom newer_than:1d'
 		)
 
 		print(
@@ -96,7 +108,7 @@ async def handle_emails(email_record):
 			email_record_file.write(','.join(email_record))
 			email_record_file.close()
 
-		await asyncio.sleep(300)
+		await asyncio.sleep(wait_duration)
 
 async def sends(channels,embeds):
 
@@ -111,15 +123,15 @@ async def sends(channels,embeds):
 	])
 
 async def send(channel,embed):
-
+	embedhash = random.seed(str(embed)[-14:])
 	print(
-		time(),
+		await time(),
 		'\033[95m',
 		'🎉 Sent',
-		''.join( color(ord(x)) for x in str(embed) ),
+		await color_of(random.randint(1e16,1e17-1)),
 		'\033[95m'+
 		'to',
-		''.join( color(int(x)) for x in re.findall('..',str(channel.id)) )
+		await color_of(channel.id)
 	)
 	return await channel.send(embed=embed)
 
@@ -200,18 +212,20 @@ async def email_from(email_id):
 		id=email_id
 	).execute()
 
-async def fetch_email_ids(query):
+async def fetch_email_ids():
 	# Call the Gmail API
 	response = gmail.users().messages().list(
 		userId='me',
-		q = query
+		q = email_query
 	).execute()
 
-	return list(filter(
-		lambda email_id: email_id not in email_record,
-		list( email_info['id'] for email_info in response['messages'] )
-	)) if (response and response['messages']) else []
-
+	if response and 'message' in response:
+		return list(filter(
+			lambda email_id: email_id not in email_record,
+			list( email_info['id'] for email_info in response['messages'] )
+		))
+	
+	return []
 
 gmail = build('gmail', 'v1', credentials=get_gmail_creds())
 bot.loop.create_task(handle_emails(email_record))

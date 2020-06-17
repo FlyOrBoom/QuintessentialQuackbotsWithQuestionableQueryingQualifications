@@ -1,1 +1,6 @@
 *.env
+
+
+# qlassroom
+token.pickle
+credentials.json

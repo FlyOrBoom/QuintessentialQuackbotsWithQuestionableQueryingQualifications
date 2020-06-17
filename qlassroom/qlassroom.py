@@ -4,10 +4,9 @@ import os.path
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
-from time import sleep
 
+import html
 import base64
-import email
 
 import os,asyncio,json,discord
 from dotenv import load_dotenv
@@ -45,48 +44,62 @@ def get_gmail_creds():
 
 async def handle_emails():
 	global email_record
-	channels = (
-		bot.get_channel(int(channel_id))
-		for channel_id
-		in os.environ['CHANNEL_IDS'].split(',')
-	)
 	await bot.wait_until_ready()
-	print(f'Logged in as {str(bot.user)}.')
+	print(f'\033[92mLogged in as {str(bot.user)}.')
 	while True:
-		print('Checking for new emails...')
-		for email in get_emails():
-			message = '📪 '+email['snippet']
-			print(message)
-			email_record.append(email['id'])
+		print('\033[94mChecking for new emails...')
+		emails = get_emails()
+		print(len(emails),'new emails.')
+		for email in emails:
+			email_subject=list(filter(
+				lambda header:header['name']=='Subject',				
+				email['payload']['headers']
+			))[0]['value']
+			embed = discord.Embed(
+				color=0x204030,
+				title='📪 '+email_subject,
+				description=html.unescape(email['snippet'])
+			)
+			channels = (
+				bot.get_channel(int(channel_id))
+				for channel_id
+				in os.environ['CHANNEL_IDS'].split(',')
+			)
 			for channel in channels:
-				await channel.send(message)
+				print(f'🎉 \033[95mSent\033[0m {email["snippet"]} \033[95mto\033[0m {channel.id}')
+				await channel.send(embed=embed)
+
+			email_record.append(email['id'])
+
+		
 		await asyncio.sleep(60)
 
 def get_emails():
-
 	# Call the Gmail API
 	response = gmail.users().messages().list(
 		userId='me',
-		q='label:Plassroom newer_than:1d'
+		q='label:Qlassroom newer_than:1d'
 	).execute()
 
 	# Filter out old messages	
 	global email_record
-	email_ids = filter(
+	email_ids = list(filter(
 		lambda email_id: email_id not in email_record,
 		list( email_info['id'] for email_info in response['messages'] )
-	)
+	))
 
 	# Return full emails
-	return (
+	emails = list(
 		gmail.users().messages().get(
 			userId='me',
-			id=email_id,
-			format='raw'
+			id=email_id
 		).execute() for email_id in email_ids
 	)	
+	
+	return emails
+
 gmail = build('gmail', 'v1', credentials=get_gmail_creds())
 bot.loop.create_task(handle_emails())
 bot.run(os.environ['TOKEN'])
-print('Logging in...')
+print('\033[45mLogging in...')
 

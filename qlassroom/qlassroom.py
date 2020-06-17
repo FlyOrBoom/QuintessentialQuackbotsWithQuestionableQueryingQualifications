@@ -1,4 +1,3 @@
-from __future__ import print_function
 import pickle
 import os.path
 from googleapiclient.discovery import build
@@ -7,6 +6,7 @@ from google.auth.transport.requests import Request
 
 import base64
 import re
+import datetime
 
 import os,asyncio,json,discord
 from dotenv import load_dotenv
@@ -16,6 +16,10 @@ bot = discord.Client()
 email_record_file = open('email_record.txt')
 email_record = email_record_file.read().split(',')
 email_record_file.close()
+
+def time():
+	return f'\033[95m{str(datetime.datetime.now()).split(" ")[1].split(".")[0]}:\033[0m'
+	
 
 def get_gmail_creds():
 
@@ -47,11 +51,23 @@ def get_gmail_creds():
 async def handle_emails():
 	global email_record
 	await bot.wait_until_ready()
-	print(f'\033[92mLogged in as {str(bot.user)}.')
+	print(
+		time(),
+		'\033[92m',
+		f'Logged in as {str(bot.user)}'
+	)
 	while True:
-		print('\033[94mChecking for new emails...')
+		print(
+			time(),
+			'\033[94m',
+			'Checking for new emails...',
+			end=''
+		)
 		emails = get_emails()
-		print(len(emails),'new emails.')
+		print(
+			'\033[93m',
+			len(emails)
+		)
 		for email in emails:
 
 			content = re.search(
@@ -73,8 +89,6 @@ async def handle_emails():
 				'url': content[6]
 			}
 
-			print(post)
-	
 			embed = discord.Embed(
 				color = 0x11aa77,
 				title = f'📪 '+post['type']+(': '+post['document'] if post['document'] else ''),
@@ -99,7 +113,17 @@ async def handle_emails():
 				in os.environ['CHANNEL_IDS'].split(',')
 			)
 			for channel in channels:
-				print(f'🎉 \033[95mSent\033[0m {email["id"]} \033[95mto\033[0m {channel.id}')
+				print(
+					time(),
+					'\033[95m',
+					'🎉 Sent',
+					'\033[0m',
+					email['id'],
+					'\033[95m',
+					'to'
+					'\033[0m',
+					channel.id
+				)
 				await channel.send(embed=embed)
 
 			email_record.append(email['id'])
@@ -108,7 +132,7 @@ async def handle_emails():
 		email_record_file.write(','.join(email_record))
 		email_record_file.close()
 
-		await asyncio.sleep(60)
+		await asyncio.sleep(300)
 
 def get_emails():
 	# Call the Gmail API

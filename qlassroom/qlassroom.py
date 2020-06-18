@@ -225,19 +225,21 @@ async def send_email_to_channels(email_id):
 
 	### Send embed
 	
-	[ print(
-		color_of(message.id),'\033[0m>>>',
-		color_of(message.guild.id),'\033[0m>>>',
-		color_of(message.channel.id),
-		f'\033[0mSent post to {message.guild.name}#{message.channel.name}'
-	) for message in await asyncio.gather(*[
-		channel.send(embed=embed)
-		for channel
-		in channels
-	]) ]
+	print(''.join(
+		color_of(message.id)+'\033[0m >>> '+
+		color_of(message.guild.id)+'\033[0m >>> '+
+		color_of(message.channel.id)+
+		f'\033[0m Sent post to \033[1m{message.guild.name}\033[0m ### \033[1m{message.channel.name}\033[0m\n'
+		for message in await asyncio.gather(*[
+			channel.send(embed=embed)
+			for channel
+			in channels
+		])
+	))
 
 	with open('config/past-email-ids.txt','a+') as file:
 		file.write('\n'+email_id)
+
 
 def fetch_new_email_ids():
 

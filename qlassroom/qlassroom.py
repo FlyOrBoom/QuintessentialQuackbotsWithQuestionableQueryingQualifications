@@ -32,13 +32,6 @@ time_print('Imported everything.')
 load_dotenv()
 bot = discord.Client()
 
-def color_ribbon(number):
-	return ''.join(
-		f'\033[38:5:{x}m▮'
-		for x
-		in re.findall('..',str(thing))
-	)
-
 def skip(reason):
 	time_print(f'\033[91m{reason} Skipping...\033[0m')
 	
@@ -138,7 +131,7 @@ async def send_email_to_channels(email_id):
 
 	### Fetch regex
 
-	regex = '(.+) p.* (.+) in (.+)\n<(.*)>.\n\n(?:\[.*\n)?(?:Due: (.*)\n(.*)\n)?([\s\S]*)\nOPEN[\n ]<(.*)>'
+	regex = '(.+) p.+ (.+) in (.+)\n<(.+)>.\n\n(?:\[.*\n)?(?:Due: (.+)\n(.+)\n)?([\s\S]+)\nO.+[\n ]<(.+)>'
 	try:
 		with open('config/email-regex.txt') as file:
 			regex = file.read()
@@ -219,12 +212,16 @@ async def send_email_to_channels(email_id):
 
 	### Send embed
 	
-	print(''.join(
-		color_ribbon(''.join(str(ord(c)).zfill(2)[:1] for c in str(embed)[-17:-1]))+'\033[0m >>> '+
-		color_ribbon(message.id)+'\033[0m >>> '+
-		color_ribbon(message.guild.id)+'\033[0m >>> '+
-		color_ribbon(message.channel.id)+
-		f'\033[0m Sent post to \033[1m{message.guild.name}\033[0m ### \033[1m{message.channel.name}\033[0m\n'
+	print(str(
+		color_ribbon(
+			str(str(ord(c)).zfill(2)[:1] for c in str(embed)[-17:-1])+
+			f'0000{message.id}'
+			f'0000{message.guild.id}'
+			f'0000{message.channel.id}'
+		)
+		+ '\033[0m Sent post to '
+		f'\033[1m{message.guild.name}\033[0m '
+		f'### \033[1m{message.channel.name}\033[0m\n'
 		for message in await asyncio.gather(*[
 			channel.send(embed=embed)
 			for channel
@@ -235,6 +232,13 @@ async def send_email_to_channels(email_id):
 	with open('config/past-email-ids.txt','a+') as file:
 		file.write('\n'+email_id)
 
+
+def color_ribbon(number):
+	return str(
+		f'\033[38:5:{x}m▮'
+		for x
+		in re.findall('..',str(number))
+	)
 
 def fetch_new_email_ids():
 

@@ -9,6 +9,15 @@ def time_print(*args):
 
 time_print('Starting Qlassroom...')
 
+import json
+
+paths = None
+with open('paths.json') as file:
+	paths = json.loads(file.read())
+if not paths:
+	time_print('\033[91mMissing paths.json! Exiting...')
+	sys.exit(0)
+
 import pickle
 
 from googleapiclient.discovery import build
@@ -22,7 +31,6 @@ import random
 import os
 import sys
 import asyncio
-import json
 import discord
 
 from dotenv import load_dotenv
@@ -45,8 +53,10 @@ def get_gmail_creds():
 	# The file token.pickle stores the user's access and refresh tokens, and is
 	# created automatically when the authorization flow completes for the first
 	# time.
-	if os.path.exists('gmail/token.pickle'):
-		with open('gmail/token.pickle', 'rb') as token:
+	
+	path = paths['gmail']['token']
+	if os.path.exists(path):
+		with open(path, 'rb') as token:
 			creds = pickle.load(token)
 	# If there are no (valid) credentials available, let the user log in.
 	if not creds or not creds.valid:
@@ -57,7 +67,7 @@ def get_gmail_creds():
 				'gmail/credentials.json', SCOPES)
 			creds = flow.run_local_server(port=0)
 		# Save the credentials for the next run
-		with open('gmail/token.pickle', 'wb') as token:
+		with open(path, 'wb') as token:
 			pickle.dump(creds, token)
 	return creds
 
@@ -67,16 +77,11 @@ async def background():
 	time_print('\033[92mLogged in as',str(bot.user))
 	while True:
 		await handler()
-		refresh_interval = 60
-		try:
-			with open('config/refresh-interval.txt') as file:
-				refresh_interval = float(file.read())
-		except IOError:
-			revive_config()
-			with open('config/refresh-interval.txt','w+') as file:
-				file.write(str(refresh_interval))
-		finally:
-			await asyncio.sleep(refresh_interval)
+		refresh_interval = float(access_config(
+			name = 'refresh_interval',
+			default = '60'
+		))
+		await asyncio.sleep(refresh_interval)
 
 async def handler():	
 
@@ -89,16 +94,47 @@ async def handler():
 		'\033[94mnew emails'
 	)
 
+	### Get channel ids
+	channel_ids = access_config(
+		name = 'channel_ids',
+	)	
+
+	### Get channels	
+	
+	channels = [
+		bot.get_channel(int(channel_id))
+		for channel_id in channel_ids
+		if int(channel_id) and len(channel_id) == 18
+	]
+
 	return await asyncio.gather(*[
-		send_email_to_channels(email_id)
+		send_email_to_channels(email_id,channels)
 		for email_id
 		in email_ids
 	])
 
-def revive_config():
+def access_config(name,write='',append='',default=''):
+	path = paths['config'][name]
 	os.makedirs('config',exist_ok=True)
+	data = None
+	response = None
+	if os.path.exists(path):
+		with open(path,'r') as file:
+			data = file.read()
+	if data:
+		if write:
+			with open(path,'w') as file:
+				file.write(write)		
+		elif append:
+			with open(path,'a') as file:
+				file.write(append)
+	else:
+		with open(path,'w') as file:
+			file.write(default)
+	with open(path,'r') as file:
+		return file.read()
 
-async def send_email_to_channels(email_id):
+async def send_email_to_channels(email_id,channels):
 
 	### Fetch full email
 
@@ -129,24 +165,16 @@ async def send_email_to_channels(email_id):
 	except AttributeError:
 		skip('Cannot decode email body!')
 
-	### Fetch regex
-
-	regex = '(.+) p.+ (.+) in (.+)\n<(.+)>.\n\n(?:\[.*\n)?(?:Due: (.+)\n(.+)\n)?([\s\S]+)\nO.+[\n ]<(.+)>'
-	try:
-		with open('config/email-regex.txt') as file:
-			regex = file.read()
-	except IOError:
-		revive_config()
-		with open('config/email-regex.txt','w+') as file:
-			file.write(regex)
-
 	### Find matches in email body
 	
-	matches = None
+	pattern = access_config(
+		name = 'email_pattern',
+		default = '(.+) p.+ (.+) in (.+)\n<(.+)>.\n\n(?:\[.*\n)?(?:Due: (.+)\n(.+)\n)?([\s\S]+)\nO.+[\n ]<(.+)>'
+	)
 
 	try:
 		matches = re.search(
-			regex,
+			pattern,
 			email_body
 		).groups()
 	except AttributeError:
@@ -191,25 +219,6 @@ async def send_email_to_channels(email_id):
 			inline = False
 		)
 
-	### Get channel ids
-	
-	try:
-		with open('config/channel-ids.csv') as file:
-			channel_ids = file.read().split(',')
-	except IOError:
-		revive_config()
-		with open('config/channel-ids.csv','w+') as file:
-			channel_ids = [input('Add a channel id: ')]
-			file.write(channel_ids[0])
-
-	### Get channels	
-	
-	channels = [
-		bot.get_channel(int(channel_id))
-		for channel_id in channel_ids
-		if channel_id
-	]
-
 	### Send embed
 	
 	print(str(
@@ -228,46 +237,37 @@ async def send_email_to_channels(email_id):
 			in channels
 		])
 	))
-
-	with open('config/past-email-ids.csv','a+') as file:
-		if not file.read(): file.write(',')
-		file.write(email_id)
-
+	access_config(
+		name = 'past_email_ids',
+		append = ','+email_id,
+		default = email_id
+	)
 
 def color_ribbon(number):
-	return str(
+	return str([
 		f'\033[38:5:{x}m▮'
 		for x
 		in re.findall('..',str(number))
-	)
+	])
 
 def fetch_new_email_ids():
 
 	# Call the Gmail API
 
-	email_query = 'newer_than:1d'	
-	try:
-		with open('config/email-query.txt') as file:
-			email_query = file.read()
-	except IOError:
-		revive_config()
-		with open('config/email-query.txt','w+') as file:
-			file.write(email_query)
+	query = access_config(
+		name = 'email_query',
+		default = 'newer_than:1d'
+	)
 
 	response = gmail.users().messages().list(
-		userId='me',
-		q = email_query
+		userId = 'me',
+		q = query
 	).execute()
 
 	if response and ( 'messages' in response ):
-		past_email_ids = []
-		try:
-			with open('config/past-email-ids.csv') as file:
-				past_email_ids = file.read().split(',')
-		except IOError:
-			revive_config()
-			with open('config/past-email-ids.csv','w+') as file:
-				file.write('')
+		past_email_ids = access_config(
+			name = 'past_email_ids'
+		)
 		return [
 			email_info['id']
 			for email_info in response['messages']
@@ -287,4 +287,5 @@ except KeyboardInterrupt:
 except Exception as e:
 	skip(e)
 	pass
-sys.exit(0)
+finally:
+	sys.exit(0)

@@ -1,3 +1,14 @@
+import datetime
+
+def time_print(*args):
+	print(
+		f'\033[95m{str(datetime.datetime.now()).split(" ")[1].split(".")[0]}:\033[0m',
+		*args,
+		'\033[0m'
+	)
+
+time_print('Starting Qlassroom...')
+
 import pickle
 
 from googleapiclient.discovery import build
@@ -6,7 +17,6 @@ from google.auth.transport.requests import Request
 
 import base64
 import re
-import datetime
 import random
 
 import os
@@ -16,8 +26,10 @@ import json
 import discord
 
 from dotenv import load_dotenv
-load_dotenv()
 
+time_print('Imported everything.')
+
+load_dotenv()
 bot = discord.Client()
 
 def color_ribbon(number):
@@ -28,10 +40,7 @@ def color_ribbon(number):
 	)
 
 def skip(reason):
-	print(f'\033[91m{reason} Skipping...\033[0m')
-
-def time():
-	return f'\033[95m{str(datetime.datetime.now()).split(" ")[1].split(".")[0]}:\033[0m'
+	time_print(f'\033[91m{reason} Skipping...\033[0m')
 	
 def get_gmail_creds():
 
@@ -62,33 +71,28 @@ def get_gmail_creds():
 async def background():
 
 	await bot.wait_until_ready()
-	print(f'{time()} \033[92m Logged in as {str(bot.user)}')
-	try:
-		while True:
-			await handler()
-			refresh_interval = 60
-			try:
-				with open('config/refresh-interval.txt') as file:
-					refresh_interval = int(file.read())
-			except IOError:
-				revive_config()
-				with open('config/refresh-interval.txt','w+') as file:
-					file.write(str(refresh_interval))
-			finally:
-				await asyncio.sleep(refresh_interval)
-
-	except KeyboardInterrupt:
-		sys.exit(0)
+	time_print('\033[92mLogged in as',str(bot.user))
+	while True:
+		await handler()
+		refresh_interval = 60
+		try:
+			with open('config/refresh-interval.txt') as file:
+				refresh_interval = float(file.read())
+		except IOError:
+			revive_config()
+			with open('config/refresh-interval.txt','w+') as file:
+				file.write(str(refresh_interval))
+		finally:
+			await asyncio.sleep(refresh_interval)
 
 async def handler():	
 
 	email_ids = []
 	email_ids = fetch_new_email_ids()
 
-	print(
-		time(),
-		'\033[93m',
-		len(email_ids),
+	time_print(
+		'\033[93m'+
+		str(len(email_ids)),
 		'\033[94mnew emails'
 	)
 
@@ -268,11 +272,15 @@ def fetch_new_email_ids():
 
 	return []
 
-def fetch_list_from(address):
-	with open(address) as file:
-		return file.read().split('\n')
-	return []
-
 gmail = build('gmail', 'v1', credentials=get_gmail_creds())
+time_print('Gmail ready.')
 bot.loop.create_task(background())
-bot.run(os.environ['discord_token'])
+time_print('Bot ready.')
+try:
+	bot.run(os.environ['discord_token'])
+except KeyboardInterrupt:
+	time_print('\033[91mStopping...')
+except Exception as e:
+	skip(e)
+	pass
+sys.exit(0)

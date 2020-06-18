@@ -5,7 +5,7 @@ straight to your server. This is designed for
 students, teachers, and parents who can't or
 wouldn't use the Google Classroom feed API.
 
-## Setup
+## Email forwarding setup
 
 You will need:
 
@@ -33,9 +33,11 @@ Subject       | New
 Has the words | Google Classroom
 Doesn't have  | private
 
-7. Download the repository.
-8. Run `py qlassroom.py`
+7. Turn on email notifiations in Google Classroom's settings.
 
-### .env
-* TOKEN: Discord bot token
-* CHANNEL\_IDs: comma-separated string of channel ids
+## Bot setup
+
+1. Download the repository.
+2. Create a `.env` file with `discord_token ='your Discord bot token'`.
+3. Download `credentials.json` from  [Gmail API's quickstart page](https://developers.google.com/gmail/api/quickstart/js#step_1_turn_on_the). Place it in the `gmail` directory.
+3. Run `py qlassroom.py`

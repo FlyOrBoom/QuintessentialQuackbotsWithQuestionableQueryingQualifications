@@ -75,8 +75,9 @@ async def background():
 				with open('config/refresh-interval.txt') as file:
 					refresh_interval = int(file.read())
 			except IOError:
+				revive_config()
 				with open('config/refresh-interval.txt','w+') as file:
-					file.write(refresh_interval)
+					file.write(str(refresh_interval))
 			finally:
 				await asyncio.sleep(refresh_interval)
 
@@ -106,6 +107,8 @@ async def handler():
 		in email_ids
 	])
 
+def revive_config():
+	os.makedirs('config',exist_ok=True)
 
 async def send_email_to_channels(email_id):
 
@@ -146,6 +149,7 @@ async def send_email_to_channels(email_id):
 		with open('config/email-regex.txt') as file:
 			regex = file.read()
 	except IOError:
+		revive_config()
 		with open('config/email-regex.txt','w+') as file:
 			file.write(regex)
 
@@ -178,8 +182,6 @@ async def send_email_to_channels(email_id):
 	except IndexError:
 		skip('Insufficient matches in pattern!')
 		return
-	else:
-		print(post)
 
 	### Create embed
 
@@ -208,6 +210,7 @@ async def send_email_to_channels(email_id):
 		with open('config/channel-ids.txt') as file:
 			channel_ids = file.read().split('\n')
 	except IOError:
+		revive_config()
 		with open('config/channel-ids.txt','w+') as file:
 			channel_ids = [input('Add a channel id: ')]
 			file.write(channel_ids[0])
@@ -221,17 +224,20 @@ async def send_email_to_channels(email_id):
 	]
 
 	### Send embed
-
-	await asyncio.gather(*[
+	
+	[ print(
+		color_of(message.id),'\033[0m>>>',
+		color_of(message.guild.id),'\033[0m>>>',
+		color_of(message.channel.id),
+		f'\033[0mSent post to {message.guild.name}#{message.channel.name}'
+	) for message in await asyncio.gather(*[
 		channel.send(embed=embed)
 		for channel
 		in channels
-	])
+	]) ]
 
 	with open('config/past-email-ids.txt','a+') as file:
 		file.write('\n'+email_id)
-	
-	return True
 
 def fetch_new_email_ids():
 
@@ -242,6 +248,7 @@ def fetch_new_email_ids():
 		with open('config/email-query.txt') as file:
 			email_query = file.read()
 	except IOError:
+		revive_config()
 		with open('config/email-query.txt','w+') as file:
 			file.write(email_query)
 
@@ -256,6 +263,7 @@ def fetch_new_email_ids():
 			with open('config/past-email-ids.txt') as file:
 				past_email_ids = file.read().split('\n')
 		except IOError:
+			revive_config()
 			with open('config/past-email-ids.txt','w+') as file:
 				file.write('')
 		return [

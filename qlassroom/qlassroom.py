@@ -20,15 +20,11 @@ load_dotenv()
 
 bot = discord.Client()
 
-def color_of(thing):
+def color_ribbon(number):
 	return ''.join(
-		map(
-			lambda x:f'\033[38:5:{x}m▮',
-			re.findall(
-				'..',
-				str(thing)
-			)
-		)
+		f'\033[38:5:{x}m▮'
+		for x
+		in re.findall('..',str(thing))
 	)
 
 def skip(reason):
@@ -86,19 +82,14 @@ async def background():
 
 async def handler():	
 
-	print(
-		time(),
-		'\033[94m',
-		'...',
-		end=''
-	)
-
 	email_ids = []
 	email_ids = fetch_new_email_ids()
 
 	print(
+		time(),
 		'\033[93m',
-		len(email_ids)
+		len(email_ids),
+		'\033[94mnew emails'
 	)
 
 	return await asyncio.gather(*[
@@ -226,10 +217,10 @@ async def send_email_to_channels(email_id):
 	### Send embed
 	
 	print(''.join(
-		color_of(''.join(str(ord(c)).zfill(2)[:1] for c in str(embed)[-17:-1]))+'\033[0m >>> '+
-		color_of(message.id)+'\033[0m >>> '+
-		color_of(message.guild.id)+'\033[0m >>> '+
-		color_of(message.channel.id)+
+		color_ribbon(''.join(str(ord(c)).zfill(2)[:1] for c in str(embed)[-17:-1]))+'\033[0m >>> '+
+		color_ribbon(message.id)+'\033[0m >>> '+
+		color_ribbon(message.guild.id)+'\033[0m >>> '+
+		color_ribbon(message.channel.id)+
 		f'\033[0m Sent post to \033[1m{message.guild.name}\033[0m ### \033[1m{message.channel.name}\033[0m\n'
 		for message in await asyncio.gather(*[
 			channel.send(embed=embed)

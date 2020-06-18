@@ -226,6 +226,7 @@ async def send_email_to_channels(email_id):
 	### Send embed
 	
 	print(''.join(
+		color_of(''.join(str(ord(c)).zfill(2)[:1] for c in str(embed)[-17:-1]))+'\033[0m >>> '+
 		color_of(message.id)+'\033[0m >>> '+
 		color_of(message.guild.id)+'\033[0m >>> '+
 		color_of(message.channel.id)+

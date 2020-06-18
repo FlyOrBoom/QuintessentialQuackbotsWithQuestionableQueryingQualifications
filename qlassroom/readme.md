@@ -1,4 +1,4 @@
-# Classroom
+# Qlassroom
 
 A Discord.py bot that sends Google Classroom posts
 straight to your server. This is designed for
@@ -37,10 +37,12 @@ Doesn't have  | private
 
 ## Bot setup
 
-1. Download the repository.
-2. Create a `.env` file with `discord_token ='your Discord bot token'`.
-3. Download `credentials.json` from  [Gmail API's quickstart page](https://developers.google.com/gmail/api/quickstart/js#step_1_turn_on_the). Place it in the `gmail` directory.
-3. Run `py qlassroom.py`
+1. Download Python3
+2. `python3 -m pip install --upgrade google-api-python-client google-auth-httplib2 google-auth-oauthlib`
+3. Download the repository.
+4. Create a `.env` file with `discord_token ='your Discord bot token'`.
+5. Download `credentials.json` from **Enable the Gmail API** on [the quickstart page](https://developers.google.com/gmail/api/quickstart/python#step_1_turn_on_the). Place it in the `gmail` directory.
+6. `python3 qlassroom.py`
 
 ## Configuration
 

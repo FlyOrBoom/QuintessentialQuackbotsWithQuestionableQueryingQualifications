@@ -41,3 +41,15 @@ Doesn't have  | private
 2. Create a `.env` file with `discord_token ='your Discord bot token'`.
 3. Download `credentials.json` from  [Gmail API's quickstart page](https://developers.google.com/gmail/api/quickstart/js#step_1_turn_on_the). Place it in the `gmail` directory.
 3. Run `py qlassroom.py`
+
+## Configuration
+
+After the first run, the bot would have created the `config` directory with some default configuration settings.
+
+File | Format | Description
+| --- | --- | --- |
+`channel-ids.txt` | `\n`-separated list of integers | Add the ids of channels you want the bot to post in.
+`past-email-ids.txt` | `\n`-separated list of integers | Cache of past emails to avoid posting duplicates.
+`email-regex.txt` | Python regex | Regex to split the email into chunks
+`refresh-interval.txt` | Integer or float seconds | How often the bot checks Gmail
+`email-query.txt` | The query the bot sends to Gmail

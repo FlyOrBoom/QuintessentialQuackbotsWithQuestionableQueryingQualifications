@@ -138,8 +138,7 @@ async def send_email_to_channels(email_id):
 
 	### Fetch regex
 
-	regex = '([\w ]+) posted a (\w+ \w+) in ([\w ]+)\n<(.*?)>.\n\n(?:\[.*\]\n)?(?:(Due:.*?)\n(.*)\n)?((?:.|\n)*)\nOPEN(?: |\n)<(.*?)>'
-
+	regex = '(.+) p.* (.+) in (.+)\n<(.*)>.\n\n(?:\[.*\n)?(?:Due: (.*)\n(.*)\n)?([\s\S]*)\nOPEN[\n ]<(.*)>'
 	try:
 		with open('config/email-regex.txt') as file:
 			regex = file.read()

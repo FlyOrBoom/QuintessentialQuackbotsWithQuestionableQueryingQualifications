@@ -50,8 +50,8 @@ After the first run, the bot would have created the `config` directory with some
 
 File | Format | Description
 | --- | --- | --- |
-`channel-ids.txt` | `\n`-separated list of integers | Add the ids of channels you want the bot to post in.
-`past-email-ids.txt` | `\n`-separated list of integers | Cache of past emails to avoid posting duplicates.
+`channel-ids.csv` | comma-separated list of integers | Add the ids of channels you want the bot to post in.
+`past-email-ids.csv` | comma-separated list of integers | Cache of past emails to avoid posting duplicates.
 `email-regex.txt` | Python regex | Regex to split the email into chunks
 `refresh-interval.txt` | Integer or float seconds | How often the bot checks Gmail
 `email-query.txt` | The query the bot sends to Gmail

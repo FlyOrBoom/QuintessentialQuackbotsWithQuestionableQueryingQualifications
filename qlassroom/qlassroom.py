@@ -194,11 +194,11 @@ async def send_email_to_channels(email_id):
 	### Get channel ids
 	
 	try:
-		with open('config/channel-ids.txt') as file:
-			channel_ids = file.read().split('\n')
+		with open('config/channel-ids.csv') as file:
+			channel_ids = file.read().split(',')
 	except IOError:
 		revive_config()
-		with open('config/channel-ids.txt','w+') as file:
+		with open('config/channel-ids.csv','w+') as file:
 			channel_ids = [input('Add a channel id: ')]
 			file.write(channel_ids[0])
 
@@ -219,7 +219,7 @@ async def send_email_to_channels(email_id):
 			f'0000{message.guild.id}'
 			f'0000{message.channel.id}'
 		)
-		+ '\033[0m Sent post to '
+		+'\033[0m Sent post to '
 		f'\033[1m{message.guild.name}\033[0m '
 		f'### \033[1m{message.channel.name}\033[0m\n'
 		for message in await asyncio.gather(*[
@@ -229,8 +229,9 @@ async def send_email_to_channels(email_id):
 		])
 	))
 
-	with open('config/past-email-ids.txt','a+') as file:
-		file.write('\n'+email_id)
+	with open('config/past-email-ids.csv','a+') as file:
+		if not file.read(): file.write(',')
+		file.write(email_id)
 
 
 def color_ribbon(number):
@@ -261,11 +262,11 @@ def fetch_new_email_ids():
 	if response and ( 'messages' in response ):
 		past_email_ids = []
 		try:
-			with open('config/past-email-ids.txt') as file:
-				past_email_ids = file.read().split('\n')
+			with open('config/past-email-ids.csv') as file:
+				past_email_ids = file.read().split(',')
 		except IOError:
 			revive_config()
-			with open('config/past-email-ids.txt','w+') as file:
+			with open('config/past-email-ids.csv','w+') as file:
 				file.write('')
 		return [
 			email_info['id']

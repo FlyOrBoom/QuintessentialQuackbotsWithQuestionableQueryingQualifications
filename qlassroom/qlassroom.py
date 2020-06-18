@@ -76,16 +76,20 @@ async def background():
 	await bot.wait_until_ready()
 	time_print('\033[92mLogged in as',str(bot.user))
 	while True:
-		await handler()
-		refresh_interval = float(access_config(
-			name = 'refresh_interval',
-			default = '60'
-		))
-		await asyncio.sleep(refresh_interval)
+		await asyncio.gather(
+			handler(),
+			sleep()
+		)
+
+async def sleep():
+	refresh_interval = float(access_config(
+		name = 'refresh_interval',
+		default = '60'
+	))
+	await asyncio.sleep(refresh_interval)
 
 async def handler():	
 
-	email_ids = []
 	email_ids = fetch_new_email_ids()
 
 	time_print(
@@ -94,9 +98,11 @@ async def handler():
 		'\033[94mnew emails'
 	)
 
+	if not email_ids: return
+
 	### Get channel ids
 	channel_ids = access_config(
-		name = 'channel_ids',
+		name = 'channel_ids'
 	)	
 
 	### Get channels	
@@ -104,8 +110,12 @@ async def handler():
 	channels = [
 		bot.get_channel(int(channel_id))
 		for channel_id in channel_ids
-		if int(channel_id) and len(channel_id) == 18
+		if channel_id
+		and channel_id.isdigit()
+		and len(channel_id) == 18
 	]
+
+	if not channels: return
 
 	return await asyncio.gather(*[
 		send_email_to_channels(email_id,channels)

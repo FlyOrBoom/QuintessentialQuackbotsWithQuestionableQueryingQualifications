@@ -46,12 +46,12 @@ Doesn't have  | private
 
 ## Configuration
 
-After the first run, the bot would have created the `config` directory with some default configuration settings.
+After the first run, the bot would have created `records.yaml`, where you can tweak the settings even when the bot is live.
 
-File | Format | Description
+Name | Format | Description
 | --- | --- | --- |
-`channel-ids.csv` | comma-separated list of integers | Add the ids of channels you want the bot to post in.
-`past-email-ids.csv` | comma-separated list of integers | Cache of past emails to avoid posting duplicates.
-`email-regex.txt` | Python regex | Regex to split the email into chunks
-`refresh-interval.txt` | Integer or float seconds | How often the bot checks Gmail
-`email-query.txt` | The query the bot sends to Gmail
+`channel ids` | list of ids | Add the ids of channels you want the bot to post in.
+`past email ids` | list of ids | Cache of past emails to avoid posting duplicates.
+`email pattern` | Python regex | Regex to split the email into chunks
+`refresh interval` | Integer or float in seconds | How often the bot checks Gmail
+`email query` | The query the bot sends to Gmail

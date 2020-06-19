@@ -11,9 +11,10 @@ import dotenv
 import config
 import cache
 import gmail
+import socket
 print(time(),'Imported everything.')
 
-async def background():
+async def background(discord_client):
 
 	await discord_client.wait_until_ready()
 	print(time(),'\033[92mLogged in as',str(discord_client.user))
@@ -28,7 +29,7 @@ async def sleep():
 
 async def handler():	
 
-	email_ids = load_new_email_ids()
+	email_ids = gmail.fetch_email_ids()
 
 	print(time(),
 		'\033[93m'+
@@ -60,12 +61,10 @@ async def handler():
 async def send_email_to_channels(email_id,channels):
 
 	### Fetch email
+	email_full = gmail.fetch_email(email_id)
 
 	try:
-		email_b64 = gmail_client.users().messages().get(
-			userId='me',
-			id=email_id
-		).execute()['payload']['parts'][0]['body']['data']
+		email_b64 = email_full['payload']['parts'][0]['body']['data']
 	except KeyError:
 		print(time(),warning,'Body data not found in email.')
 		return False
@@ -158,10 +157,14 @@ def load_new_email_ids():
 
 	# Call the gmail API
 
-	response = gmail_client.users().messages().list(
-		userId = 'me',
-		q = config.read('email query')
-	).execute()
+	try:
+		response = gmail_client.users().messages().list(
+			userId = 'me',
+			q = config.read('email query')
+		).execute()
+	except socket.timeout:
+		print(time(),error,'Connection timed out.')
+		return set()
 
 	# Subtract discord_clienth sets from each other
 
@@ -171,26 +174,22 @@ def load_new_email_ids():
 			for email_info in response['messages']
 		}
 	else:
-		received_ids = set()
+		recived_ids = set()
 	
 	past_ids = cache.read()
 	cache.write(past_ids.intersection(received_ids))
 	return received_ids - past_ids
 
-gmail_client = gmail.load({'token':'gmail/token.pickle','credentials':'credentials.json'})
-print(time(),'Gmail ready.')
-dotenv.load_dotenv()
-discord_client = discord.Client()	
-discord_client.loop.create_task(background())
-print(time(),'Bot ready.')
-
 try:
+	dotenv.load_dotenv()
+	discord_client = discord.Client()	
+	discord_client.loop.create_task(background(discord_client))
+	print(time(),'Bot ready.')
+
 	discord_client.run(os.environ['discord_token'])
 except KeyboardInterrupt:
 	print(time(),'\033[91mStopping...')
 except Exception as e:
-	print(e)
+	print(time(),error,e)
 	pass
-finally:
-	sys.exit(0)
 

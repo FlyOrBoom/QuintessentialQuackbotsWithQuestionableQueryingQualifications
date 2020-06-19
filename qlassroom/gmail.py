@@ -1,12 +1,19 @@
 import os
 import pickle
-
+import httplib2
 from googleapiclient.discovery import build
+from prefixes import *
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
+import asyncio
+import cache
+import socket,ssl
+import config
+import sys
 
-def load(paths):
+def load_client(paths):
 	return build('gmail', 'v1', credentials=load_credentials(paths))
+
 def load_credentials(paths):
 
 	# If modifying these scopes, delete the file token.pickle.
@@ -34,4 +41,48 @@ def load_credentials(paths):
 		with open(path, 'wb') as token:
 			pickle.dump(creds, token)
 	return creds
+
+
+def fetch_email_ids():
+
+	# Call the gmail API
+
+	try:
+		response = gmail_client.users().messages().list(
+			userId = 'me',
+			q = config.read('email query')
+		).execute()
+	except socket.timeout or ssl.SSLCertificationError:
+		print(time(),error,'Network Error: Unable to fetch email IDs.')
+		return set()
+
+	# Subtract discord_clienth sets from each other
+
+	if response and ( 'messages' in response ):
+		received_ids = {
+			email_info['id']
+			for email_info in response['messages']
+		}
+	else:
+		recieved_ids = set()
+	
+	past_ids = cache.read()
+	cache.write(past_ids.intersection(received_ids))
+	return received_ids - past_ids
+
+def fetch_email(email_id):
+	return gmail_client.users().messages().get(
+		userId='me',
+		id=email_id
+	).execute()
+
+try:
+	gmail_client = load_client({
+		'token':'gmail/token.pickle',
+		'credentials':'gmail/credentials.json'
+	})
+except httplib2.HttpLib2Error:
+	print(time(),error,f'Network Error: Unable to start Gmail.')
+	sys.exit(0)
+print(time(),'Gmail ready.')
 

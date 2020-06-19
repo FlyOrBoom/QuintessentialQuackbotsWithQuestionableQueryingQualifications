@@ -26,12 +26,12 @@ SNAP** tab, select **Disable forwarding** and
 6. In the school account's **Filters** tab,
 **Create a new Filter**. The settings are:
 
-Name | Value
-| --- | --- |
-From          | classroom.google.com
-Subject       | New
-Has the words | Google Classroom
-Doesn't have  | private
+|      Name     |          Value        |
+|      ---      |           ---         |
+| From          | classroom.google.com  |
+| Subject       | New                   |
+| Has the words | Google Classroom      |
+| Doesn't have  | private               |
 
 7. Turn on email notifiations in Google Classroom's settings.
 
@@ -46,14 +46,13 @@ Doesn't have  | private
 
 ## Configuration
 
-After the first run, the bot would have created `records.yaml`, where you can tweak the settings even when the bot is live.
+During its first run, Qlassroom creates the file `config.yaml`. You can tweak the settings here even when the bot is live.
 
-Name | Format | Description
-| --- | --- | --- |
-`channel ids` | list of ids | Add the ids of channels you want the bot to post in.
-`past email ids` | list of ids | Cache of past emails to avoid posting duplicates.
-`email pattern` | regular expression | Pattern to map emails onto embeds
-`email query` | Gmail query | What query to send to Gmail
-`refresh interval` | number | How many seconds between each check of Gmail
+|       Name        |        Format      |                         Description                   |
+|       ---         |         ---        |                             ---                       |
+| channel ids       | list of ids        | List of channels the bot posts in                     |
+| email pattern     | regular expression | Pattern to map emails onto embeds                     |
+| email query       | Gmail query        | What query to send to Gmail                           |
+| refresh interval  | number             | How many seconds between each check of Gmail          |
 
-If you accidentally messed up `records.yaml`, delete the file. Qlassroom will automatically create a new one.
+If you accidentally messed up `config.yaml`, delete the file. Qlassroom will automatically create a new one.

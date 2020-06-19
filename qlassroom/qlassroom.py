@@ -1,7 +1,5 @@
-from string_utils import *
+from string_ import *
 print(time(),'Starting Qlassroom...')
-import yaml
-import pickle
 import base64
 import re
 import random
@@ -10,8 +8,9 @@ import sys
 import asyncio
 import discord
 from dotenv import load_dotenv
-from record_utils import read, write, append 
-import gmail_utils
+import config_
+import cache_ 
+import gmail_
 print(time(),'Imported everything.')
 
 async def background():
@@ -25,7 +24,7 @@ async def background():
 		)
 
 async def sleep():
-	await asyncio.sleep(read('settings','refresh interval'))
+	await asyncio.sleep(config_.read('settings','refresh interval'))
 
 async def handler():	
 
@@ -41,12 +40,12 @@ async def handler():
 
 	### Get channels	
 	
-	channels = [
+	channels = {
 		bot.get_channel(int(channel_id))
 		for channel_id
-		in read('settings','channel ids')
+		in config.read('settings','channel ids')
 		if channel_id
-	]
+	}
 
 	if not channels:
 		print(time(),warning,'No channels specified.')
@@ -85,7 +84,7 @@ async def send_email_to_channels(email_id,channels):
 	
 	try:
 		matches = re.search(
-			read('settings','email pattern'),
+			config_.read('settings','email pattern'),
 			email_text
 		).groups()
 	except AttributeError:
@@ -151,8 +150,8 @@ async def send_email_to_channels(email_id,channels):
 		])
 	]
 	
-	append('cache','past email ids',email_id)
-	
+	cache_.write(cache_.read()+email_ids)	
+
 	return True
 
 def load_new_email_ids():
@@ -161,12 +160,11 @@ def load_new_email_ids():
 
 	response = gmail.users().messages().list(
 		userId = 'me',
-		q = read('settings','email query')
+		q = config_.read('settings','email query')
 	).execute()
 
 	# Subtract both sets from each other
 
-	past_ids = set(read('cache','past email ids'))
 	if response and ( 'messages' in response ):
 		received_ids = {
 			email_info['id']
@@ -174,15 +172,17 @@ def load_new_email_ids():
 		}
 	else:
 		received_ids = set([])
-	write('cache','past email ids',list(past_ids.union(received_ids)))
-	return list(received_ids - past_ids)
+	
+	past_ids = cache_.read()
+	cache_.write(past_ids.union(received_ids))
+	return received_ids - past_ids
 
-gmail = gmail_utils.load(read('paths','gmail'))
-print(time(),'Gmail ready.')
+gmail = gmail_.load(config_.read('paths','gmail'))
+print(time(),'Gmail config.ready.')
 load_dotenv()
 bot = discord.Client()	
 bot.loop.create_task(background())
-print(time(),'Bot ready.')
+print(time(),'Bot config.ready.')
 
 try:
 	bot.run(os.environ['discord_token'])

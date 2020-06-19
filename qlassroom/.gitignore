@@ -1,4 +1,5 @@
 *.env
 
 gmail/
-records.yaml
+config.yaml
+.cache.pickle

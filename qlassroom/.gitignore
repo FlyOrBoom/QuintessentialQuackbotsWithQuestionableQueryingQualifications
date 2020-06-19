@@ -1,4 +1,4 @@
 *.env
 
 gmail/
-config/
+records.yaml

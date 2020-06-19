@@ -1,28 +1,11 @@
-import datetime
+from string_utils import *
+import sys
 
-def time_print(*args):
-	print(
-		f'\033[95m{str(datetime.datetime.now()).split(" ")[1].split(".")[0]}:\033[0m',
-		*args,
-		'\033[0m'
-	)
+print(time(),'Starting Qlassroom...')
 
-time_print('Starting Qlassroom...')
-
-import json
-
-paths = None
-with open('paths.json') as file:
-	paths = json.loads(file.read())
-if not paths:
-	time_print('\033[91mMissing paths.json! Exiting...')
-	sys.exit(0)
+import yaml
 
 import pickle
-
-from googleapiclient.discovery import build
-from google_auth_oauthlib.flow import InstalledAppFlow
-from google.auth.transport.requests import Request
 
 import base64
 import re
@@ -35,77 +18,53 @@ import discord
 
 from dotenv import load_dotenv
 
-time_print('Imported everything.')
+import record_utils
+import gmail_utils
 
+print(time(),'Imported everything.')
+
+records = record_utils.load()
+gmail = gmail_utils.load(records['paths'])
 load_dotenv()
 bot = discord.Client()
-
-def skip(reason):
-	time_print(f'\033[91m{reason} Skipping...\033[0m')
 	
-def get_gmail_creds():
-
-	# If modifying these scopes, delete the file token.pickle.
-	SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
-		
-	creds = None
-	
-	# The file token.pickle stores the user's access and refresh tokens, and is
-	# created automatically when the authorization flow completes for the first
-	# time.
-	
-	path = paths['gmail']['token']
-	if os.path.exists(path):
-		with open(path, 'rb') as token:
-			creds = pickle.load(token)
-	# If there are no (valid) credentials available, let the user log in.
-	if not creds or not creds.valid:
-		if creds and creds.expired and creds.refresh_token:
-			creds.refresh(Request())
-		else:
-			flow = InstalledAppFlow.from_client_secrets_file(
-				'gmail/credentials.json', SCOPES)
-			creds = flow.run_local_server(port=0)
-		# Save the credentials for the next run
-		with open(path, 'wb') as token:
-			pickle.dump(creds, token)
-	return creds
-
 async def background():
 
 	await bot.wait_until_ready()
-	time_print('\033[92mLogged in as',str(bot.user))
+	print(time(),'\033[92mLogged in as',str(bot.user))
 	while True:
-		await handler()
-		refresh_interval = float(access_config(
-			name = 'refresh_interval',
-			default = '60'
-		))
-		await asyncio.sleep(refresh_interval)
+		await asyncio.gather(
+			handler(),
+			sleep()
+		)
+
+async def sleep():
+	await asyncio.sleep(records['settings']['refresh interval'])
 
 async def handler():	
 
-	email_ids = []
-	email_ids = fetch_new_email_ids()
+	email_ids = load_new_email_ids()
 
-	time_print(
+	print(time(),
 		'\033[93m'+
 		str(len(email_ids)),
 		'\033[94mnew emails'
 	)
 
-	### Get channel ids
-	channel_ids = access_config(
-		name = 'channel_ids',
-	)	
+	if not email_ids: return True
 
 	### Get channels	
 	
 	channels = [
 		bot.get_channel(int(channel_id))
-		for channel_id in channel_ids
-		if int(channel_id) and len(channel_id) == 18
+		for channel_id
+		in records['settings']['channel ids']
+		if channel_id
 	]
+
+	if not channels:
+		print(time(),warning,'No channels specified.')
+		return False
 
 	return await asyncio.gather(*[
 		send_email_to_channels(email_id,channels)
@@ -113,73 +72,39 @@ async def handler():
 		in email_ids
 	])
 
-def access_config(name,write='',append='',default=''):
-	path = paths['config'][name]
-	os.makedirs('config',exist_ok=True)
-	data = None
-	response = None
-	if os.path.exists(path):
-		with open(path,'r') as file:
-			data = file.read()
-	if data:
-		if write:
-			with open(path,'w') as file:
-				file.write(write)		
-		elif append:
-			with open(path,'a') as file:
-				file.write(append)
-	else:
-		with open(path,'w') as file:
-			file.write(default)
-	with open(path,'r') as file:
-		return file.read()
-
 async def send_email_to_channels(email_id,channels):
 
-	### Fetch full email
+	### Fetch email
 
-	email_full = None
-
-	email_full = gmail.users().messages().get(
-		userId='me',
-		id=email_id
-	).execute()
-
-	### Retrieve email body
-
-	email_body_b64 = None
-	
 	try:
-		email_body_b64 = email_full['payload']['parts'][0]['body']['data']
+		email_b64 = gmail.users().messages().get(
+			userId='me',
+			id=email_id
+		).execute()['payload']['parts'][0]['body']['data']
 	except KeyError:
-		skip('Body data not found in email!')
+		print(time(),warning,'Body data not found in email.')
+		return False
 
-	### Decode email body
+	### Decode email
 	
-	email_body = None
-
 	try:
-		email_body = base64.urlsafe_b64decode(
-			email_body_b64
+		email_text = base64.urlsafe_b64decode(
+			email_b64
 		).decode('utf-8').replace('\r','')
 	except AttributeError:
-		skip('Cannot decode email body!')
+		print(time(),warning,'Cannot decode email body.')
+		return False
 
 	### Find matches in email body
 	
-	pattern = access_config(
-		name = 'email_pattern',
-		default = '(.+) p.+ (.+) in (.+)\n<(.+)>.\n\n(?:\[.*\n)?(?:Due: (.+)\n(.+)\n)?([\s\S]+)\nO.+[\n ]<(.+)>'
-	)
-
 	try:
 		matches = re.search(
-			pattern,
-			email_body
+			records['settings']['email pattern'],
+			email_text
 		).groups()
 	except AttributeError:
-		skip('Email body does not match pattern!')
-		return
+		print(time(),warning,'Email body does not match pattern.')
+		return False
 
 	### Format matches
 
@@ -195,8 +120,8 @@ async def send_email_to_channels(email_id,channels):
 			'url': matches[7]
 		}
 	except IndexError:
-		skip('Insufficient matches in pattern!')
-		return
+		print(time(),warning,'Insufficient matches in pattern.')
+		return False
 
 	### Create embed
 
@@ -220,72 +145,59 @@ async def send_email_to_channels(email_id,channels):
 		)
 
 	### Send embed
-	
-	print(str(
-		color_ribbon(
-			str(str(ord(c)).zfill(2)[:1] for c in str(embed)[-17:-1])+
-			f'0000{message.id}'
-			f'0000{message.guild.id}'
-			f'0000{message.channel.id}'
+
+	[	
+		print(
+			color_ribbon(
+				''.join([str(ord(c)).zfill(2)[:2] for c in str(embed)[-17:-1]])+
+				f'0000{message.id}'
+				f'0000{message.guild.id}'
+				f'0000{message.channel.id}'
+			)
+			+'\033[0m Sent post to '
+			f'\033[1m{message.guild.name}\033[0m '
+			f'### \033[1m{message.channel.name}\033[0m\n'
 		)
-		+'\033[0m Sent post to '
-		f'\033[1m{message.guild.name}\033[0m '
-		f'### \033[1m{message.channel.name}\033[0m\n'
 		for message in await asyncio.gather(*[
 			channel.send(embed=embed)
 			for channel
 			in channels
 		])
-	))
-	access_config(
-		name = 'past_email_ids',
-		append = ','+email_id,
-		default = email_id
-	)
+	]
+	
+	records['cache']['past email ids'].append(email_id)
+	
+	return True
 
-def color_ribbon(number):
-	return str([
-		f'\033[38:5:{x}m▮'
-		for x
-		in re.findall('..',str(number))
-	])
-
-def fetch_new_email_ids():
+def load_new_email_ids():
 
 	# Call the Gmail API
 
-	query = access_config(
-		name = 'email_query',
-		default = 'newer_than:1d'
-	)
-
 	response = gmail.users().messages().list(
 		userId = 'me',
-		q = query
+		q = records['settings']['email query']
 	).execute()
 
 	if response and ( 'messages' in response ):
-		past_email_ids = access_config(
-			name = 'past_email_ids'
-		)
 		return [
 			email_info['id']
 			for email_info in response['messages']
-			if email_info['id'] not in past_email_ids
+			if email_info['id']
+			not in records['cache']['past email ids']
 		]
 
 	return []
 
-gmail = build('gmail', 'v1', credentials=get_gmail_creds())
-time_print('Gmail ready.')
+print(time(),'Gmail ready.')
 bot.loop.create_task(background())
-time_print('Bot ready.')
+print(time(),'Bot ready.')
 try:
 	bot.run(os.environ['discord_token'])
 except KeyboardInterrupt:
-	time_print('\033[91mStopping...')
+	print(time(),'\033[91mStopping...')
 except Exception as e:
-	skip(e)
+	print(e)
 	pass
 finally:
+	record_utils.save(records)
 	sys.exit(0)

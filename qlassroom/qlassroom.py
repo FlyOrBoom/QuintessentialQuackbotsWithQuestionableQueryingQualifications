@@ -178,15 +178,18 @@ def load_new_email_ids():
 		q = records['settings']['email query']
 	).execute()
 
+	# Subtract both sets from each other
+
+	past_ids = set(records['cache']['past email ids'])
 	if response and ( 'messages' in response ):
-		return [
+		received_ids = {
 			email_info['id']
 			for email_info in response['messages']
-			if email_info['id']
-			not in records['cache']['past email ids']
-		]
-
-	return []
+		}
+	else:
+		received_ids = {}
+	records['cache']['past email ids'] = list(past_ids.union(received_ids))
+	return list(received_ids - past_ids)
 
 print(time(),'Gmail ready.')
 bot.loop.create_task(background())

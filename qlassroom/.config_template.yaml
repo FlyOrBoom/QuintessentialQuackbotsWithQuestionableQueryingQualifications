@@ -1,7 +1,5 @@
 ---
 channel ids:
-  - #channel id 1#
-  - #channel id 2#
 email pattern: '(.+) p.+ (.+) in (.+)\n<(.+)>.\n\n(?:\[.*\n)?(?:Due: (.+)\n(.+)\n)?([\s\S]+)\nO.+[\n ]<(.+)>'
-email query: newer_than:1d
+email query: from:(classroom.google.com) newer_than:1d
 refresh interval: 60

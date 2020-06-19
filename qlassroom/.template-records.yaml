@@ -1,19 +1,16 @@
----
-settings:
-  channel ids: [
-    551170848694730764
-  ]
-  refresh interval: 60
-  email pattern: >
-    (.+) p.+ (.+) in (.+)\n<(.+)>.\n\n(?:\[.*\n)?(?:Due: (.+)\n(.+)\n)?([\s\S]+)\nO.+[\n ]<(.+)>
-  email query: newer_than:1d
 cache:
-  past email ids: [
-    172c4efb497e786d,172c4da046c14dc8,172c4c9005706291,172c94679c9086e0,172c9441a3a6613a,172c92e83345494d
-  ]
+  past email ids:
 paths:
-  gmail:
-    token: gmail/token.pickle
-    credentials: gmail/credentials.json
   bot:
     token: .env
+  gmail:
+    credentials: gmail/credentials.json
+    token: gmail/token.pickle
+settings:
+  channel ids:
+# - <channel id 1>
+# - <channel id 2>
+  email pattern: '(.+) p.+ (.+) in (.+)\n<(.+)>.\n\n(?:\[.*\n)?(?:Due: (.+)\n(.+)\n)?([\s\S]+)\nO.+[\n
+    ]<(.+)>'
+  email query: newer_than:1d
+  refresh interval: 60

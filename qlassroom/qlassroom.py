@@ -156,7 +156,7 @@ async def send_email_to_channels(email_id,channels):
 			)
 			+'\033[0m Sent post to '
 			f'\033[1m{message.guild.name}\033[0m '
-			f'### \033[1m{message.channel.name}\033[0m\n'
+			f'### \033[1m{message.channel.name}\033[0m'
 		)
 		for message in await asyncio.gather(*[
 			channel.send(embed=embed)

@@ -187,7 +187,7 @@ def load_new_email_ids():
 			for email_info in response['messages']
 		}
 	else:
-		received_ids = {0}
+		received_ids = set([])
 	records['cache']['past email ids'] = list(past_ids.union(received_ids))
 	return list(received_ids - past_ids)
 

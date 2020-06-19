@@ -66,7 +66,7 @@ async def send_email_to_channels(email_id,channels):
 	try:
 		email_b64 = email_full['payload']['parts'][0]['body']['data']
 	except KeyError:
-		print(time(),warning,'Body data not found in email.')
+		print(time(),warning,f'Body data not found in email {email_id}.')
 		return False
 
 	### Decode email
@@ -76,7 +76,7 @@ async def send_email_to_channels(email_id,channels):
 			email_b64
 		).decode('utf-8').replace('\r','')
 	except AttributeError:
-		print(time(),warning,'Cannot decode email body.')
+		print(time(),warning,f'Cannot decode email {email_id}.')
 		return False
 
 	### Find matches in email body
@@ -87,7 +87,7 @@ async def send_email_to_channels(email_id,channels):
 			email_text
 		).groups()
 	except AttributeError:
-		print(time(),warning,'Email body does not match pattern.')
+		print(time(),warning,f'Email {email_id} does not match pattern.')
 		return False
 
 	### Format matches
@@ -149,7 +149,7 @@ async def send_email_to_channels(email_id,channels):
 		])
 	]
 	
-	cache.write(cache.read().union({email_id}))
+	cache.write(cache.read().union(email_id))
 
 	return True
 

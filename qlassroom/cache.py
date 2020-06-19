@@ -11,4 +11,4 @@ def read():
 		return pickle.load(cache) 
 def write(data):
 	with open(path,'wb') as cache:
-		pickle.dump(data,cache) 
+		return pickle.dump(data,cache) 

@@ -18,7 +18,7 @@ def load_credentials(paths):
 	# created automatically when the authorization flow completes for the first
 	# time.
 	
-	path = paths['gmail']['token']
+	path = paths['token']
 	if os.path.exists(path):
 		with open(path, 'rb') as token:
 			creds = pickle.load(token)
@@ -28,7 +28,7 @@ def load_credentials(paths):
 			creds.refresh(Request())
 		else:
 			flow = InstalledAppFlow.from_client_secrets_file(
-				paths['gmail']['credentials'], SCOPES)
+				paths['credentials'], SCOPES)
 			creds = flow.run_local_server(port=0)
 		# Save the credentials for the next run
 		with open(path, 'wb') as token:

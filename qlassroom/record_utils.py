@@ -7,13 +7,14 @@ def load():
 			return yaml.safe_load(file)
 	except yaml.YAMLError:
 		print(time(),warning,'Invalid records.yaml.')
-		use_template_records()
-		pass
+		return use_template()
 	except OSError:
-		use_template_records()	
-		pass
+		return use_template()	
 
-def use_template_records():
+def read(directory,key):
+	return load()[directory][key]
+
+def use_template():
 	try:
 		with open('.template-records.yaml') as template:
 			with open('records.yaml','w') as file:
@@ -27,6 +28,14 @@ def use_template_records():
 		print(time(),error,'.template-records.yaml does not exist.')
 		return False
 
-def save(records):
+def append(directory,key,value):
+	return write(
+		directory,key,
+		read(directory,key).append(value)
+	)
+
+def write(directory,key,value):
+	records = load()
+	records[directory][key] = value
 	with open('records.yaml','w') as file:
 		return yaml.dump(records, file)

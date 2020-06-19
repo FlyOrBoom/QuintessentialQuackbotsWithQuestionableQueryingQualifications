@@ -1,33 +1,19 @@
 from string_utils import *
-import sys
-
 print(time(),'Starting Qlassroom...')
-
 import yaml
-
 import pickle
-
 import base64
 import re
 import random
-
 import os
 import sys
 import asyncio
 import discord
-
 from dotenv import load_dotenv
-
-import record_utils
+from record_utils import read, write, append 
 import gmail_utils
-
 print(time(),'Imported everything.')
 
-records = record_utils.load()
-gmail = gmail_utils.load(records['paths'])
-load_dotenv()
-bot = discord.Client()
-	
 async def background():
 
 	await bot.wait_until_ready()
@@ -39,7 +25,7 @@ async def background():
 		)
 
 async def sleep():
-	await asyncio.sleep(records['settings']['refresh interval'])
+	await asyncio.sleep(read('settings','refresh interval'))
 
 async def handler():	
 
@@ -58,7 +44,7 @@ async def handler():
 	channels = [
 		bot.get_channel(int(channel_id))
 		for channel_id
-		in records['settings']['channel ids']
+		in read('settings','channel ids')
 		if channel_id
 	]
 
@@ -99,7 +85,7 @@ async def send_email_to_channels(email_id,channels):
 	
 	try:
 		matches = re.search(
-			records['settings']['email pattern'],
+			read('settings','email pattern'),
 			email_text
 		).groups()
 	except AttributeError:
@@ -165,7 +151,7 @@ async def send_email_to_channels(email_id,channels):
 		])
 	]
 	
-	records['cache']['past email ids'].append(email_id)
+	append('cache','past email ids',email_id)
 	
 	return True
 
@@ -175,12 +161,12 @@ def load_new_email_ids():
 
 	response = gmail.users().messages().list(
 		userId = 'me',
-		q = records['settings']['email query']
+		q = read('settings','email query')
 	).execute()
 
 	# Subtract both sets from each other
 
-	past_ids = set(records['cache']['past email ids'])
+	past_ids = set(read('cache','past email ids'))
 	if response and ( 'messages' in response ):
 		received_ids = {
 			email_info['id']
@@ -188,12 +174,16 @@ def load_new_email_ids():
 		}
 	else:
 		received_ids = set([])
-	records['cache']['past email ids'] = list(past_ids.union(received_ids))
+	write('cache','past email ids',list(past_ids.union(received_ids)))
 	return list(received_ids - past_ids)
 
+gmail = gmail_utils.load(read('paths','gmail'))
 print(time(),'Gmail ready.')
+load_dotenv()
+bot = discord.Client()	
 bot.loop.create_task(background())
 print(time(),'Bot ready.')
+
 try:
 	bot.run(os.environ['discord_token'])
 except KeyboardInterrupt:
@@ -202,5 +192,5 @@ except Exception as e:
 	print(e)
 	pass
 finally:
-	record_utils.save(records)
 	sys.exit(0)
+

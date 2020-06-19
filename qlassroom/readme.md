@@ -52,6 +52,6 @@ Name | Format | Description
 | --- | --- | --- |
 `channel ids` | list of ids | Add the ids of channels you want the bot to post in.
 `past email ids` | list of ids | Cache of past emails to avoid posting duplicates.
-`email pattern` | Python regex | Regex to split the email into chunks
-`refresh interval` | Integer or float in seconds | How often the bot checks Gmail
-`email query` | The query the bot sends to Gmail
+`email pattern` | regular expression | Pattern to map emails onto embeds
+`email query` | Gmail query | What query to send to Gmail
+`refresh interval` | number | How many seconds between each check of Gmail

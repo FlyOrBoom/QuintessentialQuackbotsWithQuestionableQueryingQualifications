@@ -1,4 +1,4 @@
-from string_ import *
+from prefixes import *
 print(time(),'Starting Qlassroom...')
 import base64
 import re
@@ -7,16 +7,16 @@ import os
 import sys
 import asyncio
 import discord
-from dotenv import load_dotenv
-import config_
-import cache_ 
-import gmail_
+import dotenv
+import config
+import cache
+import gmail
 print(time(),'Imported everything.')
 
 async def background():
 
-	await bot.wait_until_ready()
-	print(time(),'\033[92mLogged in as',str(bot.user))
+	await discord_client.wait_until_ready()
+	print(time(),'\033[92mLogged in as',str(discord_client.user))
 	while True:
 		await asyncio.gather(
 			handler(),
@@ -24,7 +24,7 @@ async def background():
 		)
 
 async def sleep():
-	await asyncio.sleep(config_.read('settings','refresh interval'))
+	await asyncio.sleep(config.read('refresh interval'))
 
 async def handler():	
 
@@ -41,9 +41,9 @@ async def handler():
 	### Get channels	
 	
 	channels = {
-		bot.get_channel(int(channel_id))
+		discord_client.get_channel(int(channel_id))
 		for channel_id
-		in config.read('settings','channel ids')
+		in config.read('channel ids')
 		if channel_id
 	}
 
@@ -62,7 +62,7 @@ async def send_email_to_channels(email_id,channels):
 	### Fetch email
 
 	try:
-		email_b64 = gmail.users().messages().get(
+		email_b64 = gmail_client.users().messages().get(
 			userId='me',
 			id=email_id
 		).execute()['payload']['parts'][0]['body']['data']
@@ -84,7 +84,7 @@ async def send_email_to_channels(email_id,channels):
 	
 	try:
 		matches = re.search(
-			config_.read('settings','email pattern'),
+			config.read('email pattern'),
 			email_text
 		).groups()
 	except AttributeError:
@@ -150,20 +150,20 @@ async def send_email_to_channels(email_id,channels):
 		])
 	]
 	
-	cache_.write(cache_.read()+email_ids)	
+	cache.write(cache.read().union({email_id}))
 
 	return True
 
 def load_new_email_ids():
 
-	# Call the Gmail API
+	# Call the gmail API
 
-	response = gmail.users().messages().list(
+	response = gmail_client.users().messages().list(
 		userId = 'me',
-		q = config_.read('settings','email query')
+		q = config.read('email query')
 	).execute()
 
-	# Subtract both sets from each other
+	# Subtract discord_clienth sets from each other
 
 	if response and ( 'messages' in response ):
 		received_ids = {
@@ -171,21 +171,21 @@ def load_new_email_ids():
 			for email_info in response['messages']
 		}
 	else:
-		received_ids = set([])
+		received_ids = set()
 	
-	past_ids = cache_.read()
-	cache_.write(past_ids.union(received_ids))
+	past_ids = cache.read()
+	cache.write(past_ids.intersection(received_ids))
 	return received_ids - past_ids
 
-gmail = gmail_.load(config_.read('paths','gmail'))
-print(time(),'Gmail config.ready.')
-load_dotenv()
-bot = discord.Client()	
-bot.loop.create_task(background())
-print(time(),'Bot config.ready.')
+gmail_client = gmail.load({'token':'gmail/token.pickle','credentials':'credentials.json'})
+print(time(),'Gmail ready.')
+dotenv.load_dotenv()
+discord_client = discord.Client()	
+discord_client.loop.create_task(background())
+print(time(),'Bot ready.')
 
 try:
-	bot.run(os.environ['discord_token'])
+	discord_client.run(os.environ['discord_token'])
 except KeyboardInterrupt:
 	print(time(),'\033[91mStopping...')
 except Exception as e:

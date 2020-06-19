@@ -3,3 +3,4 @@
 gmail/
 config.yaml
 .cache.pickle
+__pycache__/

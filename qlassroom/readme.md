@@ -55,3 +55,5 @@ Name | Format | Description
 `email pattern` | regular expression | Pattern to map emails onto embeds
 `email query` | Gmail query | What query to send to Gmail
 `refresh interval` | number | How many seconds between each check of Gmail
+
+If you accidentally messed up `records.yaml`, delete the file. Qlassroom will automatically create a new one.

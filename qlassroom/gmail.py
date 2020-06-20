@@ -2,7 +2,7 @@ import os
 import pickle
 import httplib2
 from googleapiclient.discovery import build
-from prefixes import *
+from print_fancy import *
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 import asyncio
@@ -53,7 +53,7 @@ def fetch_email_ids():
 			q = config.read('email query')
 		).execute()
 	except socket.timeout or ssl.SSLCertificationError:
-		print(time(),error,'Network Error: Unable to fetch email IDs.')
+		print_error('Network Error: Unable to fetch email IDs.')
 		return set()
 
 	# Subtract discord_clienth sets from each other
@@ -82,7 +82,7 @@ try:
 		'credentials':'gmail/credentials.json'
 	})
 except httplib2.HttpLib2Error:
-	print(time(),error,f'Network Error: Unable to start Gmail.')
+	print_error(f'Network Error: Unable to start Gmail.')
 	sys.exit(0)
-print(time(),'Gmail ready.')
+print_time('Gmail ready.')
 

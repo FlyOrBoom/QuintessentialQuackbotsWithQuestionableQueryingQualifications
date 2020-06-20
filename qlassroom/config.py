@@ -1,12 +1,12 @@
 import yaml
-from prefixes import *
+from print_fancy import *
 
 def load():
 	try:
 		with open('config.yaml') as file:
 			return yaml.safe_load(file)
 	except yaml.YAMLError:
-		print(time(),warning,'Invalid config.yaml.')
+		print_warning('Invalid config.yaml.')
 		return use_template()
 	except OSError:
 		return use_template()	
@@ -19,13 +19,13 @@ def use_template():
 		with open('.config_template.yaml') as template:
 			with open('config.yaml','w') as file:
 				file.write(template.read())
-				print(time(),'Created new config.yaml from template')
+				print_time('Created new config.yaml from template')
 				return yaml.safe_load(file)
 	except yaml.YAMLError:
-		print(time(),error,'Invalid .config_template.yaml')
+		print_error('Invalid .config_template.yaml')
 		return False
 	except OSError:
-		print(time(),error,'.config_template.yaml does not exist.')
+		print_error('.config_template.yaml does not exist.')
 		return False
 
 def write(directory,key):

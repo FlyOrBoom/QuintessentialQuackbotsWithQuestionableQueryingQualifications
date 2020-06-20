@@ -1,37 +1,26 @@
-from prefixes import *
-print(time(),'Starting Qlassroom...')
-import base64
-import re
-import random
-import os
-import sys
-import asyncio
-import discord
-import dotenv
-import config
-import cache
-import gmail
-import socket
-print(time(),'Imported everything.')
+from print_fancy import *
+print_time('Starting Qlassroom...')
+import base64, re, random, os, sys, time, asyncio, socket
+import dotenv, config, cache
+import gmail, discord
+print_time('Imported everything.')
 
 async def background(discord_client):
 
 	await discord_client.wait_until_ready()
-	print(time(),'\033[92mLogged in as',str(discord_client.user))
+	print_time('\033[92mLogged in as',str(discord_client.user))
 	while True:
-		await asyncio.gather(
-			handler(),
-			sleep()
+		last_refresh = time.time()
+		await handler()
+		await asyncio.sleep(
+			 last_refresh - time.time() + config.read('refresh interval')
 		)
-
-async def sleep():
-	await asyncio.sleep(config.read('refresh interval'))
 
 async def handler():	
 
 	email_ids = gmail.fetch_email_ids()
 
-	print(time(),
+	print_time(
 		'\033[93m'+
 		str(len(email_ids)),
 		'\033[94mnew emails'
@@ -49,7 +38,7 @@ async def handler():
 	}
 
 	if not channels:
-		print(time(),warning,'No channels specified.')
+		print_warning('No channels specified.')
 		return False
 
 	return await asyncio.gather(*[
@@ -66,7 +55,7 @@ async def send_email_to_channels(email_id,channels):
 	try:
 		email_b64 = email_full['payload']['parts'][0]['body']['data']
 	except KeyError:
-		print(time(),warning,f'Body data not found in email {email_id}.')
+		print_warning(f'Body data not found in email {email_id}.')
 		return False
 
 	### Decode email
@@ -76,7 +65,7 @@ async def send_email_to_channels(email_id,channels):
 			email_b64
 		).decode('utf-8').replace('\r','')
 	except AttributeError:
-		print(time(),warning,f'Cannot decode email {email_id}.')
+		print_warning(f'Cannot decode email {email_id}.')
 		return False
 
 	### Find matches in email body
@@ -87,7 +76,7 @@ async def send_email_to_channels(email_id,channels):
 			email_text
 		).groups()
 	except AttributeError:
-		print(time(),warning,f'Email {email_id} does not match pattern.')
+		print_warning(f'Email {email_id} does not match pattern.')
 		return False
 
 	### Format matches
@@ -104,7 +93,7 @@ async def send_email_to_channels(email_id,channels):
 			'url': matches[7]
 		}
 	except IndexError:
-		print(time(),warning,'Insufficient matches in pattern.')
+		print_warning('Insufficient matches in pattern.')
 		return False
 
 	### Create embed
@@ -157,12 +146,12 @@ try:
 	dotenv.load_dotenv()
 	discord_client = discord.Client()	
 	discord_client.loop.create_task(background(discord_client))
-	print(time(),'Bot ready.')
+	print_time('Bot ready.')
 
 	discord_client.run(os.environ['discord_token'])
 except KeyboardInterrupt:
-	print(time(),'\033[91mStopping...')
+	print_time('\033[91mStopping...')
 except Exception as e:
-	print(time(),error,e)
+	print_error(e)
 	pass
 

@@ -58,13 +58,13 @@ def fetch_email_ids():
 
 	# Subtract discord_clienth sets from each other
 
+	received_ids = set()
+
 	if response and ( 'messages' in response ):
 		received_ids = {
 			email_info['id']
 			for email_info in response['messages']
 		}
-	else:
-		recieved_ids = set()
 	
 	past_ids = cache.read()
 	cache.write(past_ids.intersection(received_ids))

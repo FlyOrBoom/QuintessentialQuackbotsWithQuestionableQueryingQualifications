@@ -153,33 +153,6 @@ async def send_email_to_channels(email_id,channels):
 
 	return True
 
-def load_new_email_ids():
-
-	# Call the gmail API
-
-	try:
-		response = gmail_client.users().messages().list(
-			userId = 'me',
-			q = config.read('email query')
-		).execute()
-	except socket.timeout:
-		print(time(),error,'Connection timed out.')
-		return set()
-
-	# Subtract discord_clienth sets from each other
-
-	if response and ( 'messages' in response ):
-		received_ids = {
-			email_info['id']
-			for email_info in response['messages']
-		}
-	else:
-		recived_ids = set()
-	
-	past_ids = cache.read()
-	cache.write(past_ids.intersection(received_ids))
-	return received_ids - past_ids
-
 try:
 	dotenv.load_dotenv()
 	discord_client = discord.Client()	

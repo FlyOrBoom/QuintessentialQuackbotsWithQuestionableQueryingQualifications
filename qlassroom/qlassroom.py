@@ -121,15 +121,17 @@ async def send_email_to_channels(email_id,channels):
 
 	[	
 		print(
-			color_ribbon(
-				''.join([str(ord(c)).zfill(2)[:2] for c in str(embed)[-17:-1]])+
-				f'0000{message.id}'
-				f'0000{message.guild.id}'
-				f'0000{message.channel.id}'
-			)
-			+'\033[0m Sent post to '
-			f'\033[1m{message.guild.name}\033[0m '
-			f'### \033[1m{message.channel.name}\033[0m'
+			' '.join([
+				color_ribbon(id) for id in(
+					''.join([str(ord(c)).zfill(2)[:2] for c in str(embed)[-17:-1]]),
+					message.id,
+					message.guild.id,
+					message.channel.id,
+				)
+			]),
+			'\033[0mSent post to '
+			f'\033[0mserver \033[1m{message.guild.name}',
+			f'\033[0mchannel \033[1m{message.channel.name}\033[0m'
 		)
 		for message in await asyncio.gather(*[
 			channel.send(embed=embed)

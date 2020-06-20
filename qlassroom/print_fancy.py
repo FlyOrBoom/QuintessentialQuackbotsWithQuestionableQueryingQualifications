@@ -1,5 +1,6 @@
 import re
 from datetime import datetime
+from random import randint
 
 def color_ribbon(number):
 	return ''.join([
@@ -9,8 +10,7 @@ def color_ribbon(number):
 	])
 
 def print_time(*args):
-	now = str(datetime.now().time())[:8]
-	time = f'\033[95m{now} {color_ribbon(now[6:])}\033[0m'
+	time = f'{color_ribbon(str(randint(10,99)))} \033[95m{str(datetime.now().time())[:8]}\033[0m'
 	return print(time,*args)
 
 def print_error(*args):

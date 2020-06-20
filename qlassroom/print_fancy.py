@@ -1,15 +1,16 @@
 import re
-import datetime
+from datetime import datetime
 
 def color_ribbon(number):
 	return ''.join([
-		f'\033[38:5:{x}m▮'
+		f'\033[38:5:{132+int(x)}m▮'
 		for x
 		in re.findall('..',number)
 	])
 
 def print_time(*args):
-	time = f'\033[95m{str(datetime.datetime.now()).split(" ")[1].split(".")[0]}:\033[0m'
+	now = str(datetime.now().time())[:8]
+	time = f'\033[95m{now} {color_ribbon(now[6:])}\033[0m'
 	return print(time,*args)
 
 def print_error(*args):

@@ -151,6 +151,7 @@ try:
 	discord_client.run(os.environ['discord_token'])
 except KeyboardInterrupt:
 	print_time('\033[91mStopping...')
+	sys.exit(0)
 except Exception as e:
 	print_error(e)
 	pass

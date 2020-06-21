@@ -1,5 +1,29 @@
----
 channel ids:
+# - 551170848694730764
+# - 618977683128188939
+# The list of channel IDs where Qlassroom can
+# relay posts to. To add them here, go to Discord,
+# right click the channel name, and 'Copy ID'.
+# Add them like the examples above (without the #).
+
 email pattern: '(.+) p.+ (.+) in (.+)\n<(.+)>.\n\n(?:\[.*\n)?(?:Due: (.+)\n(.+)\n)?([\s\S]+)\nO.+[\n ]<(.+)>'
+# A regular expression pattern for destructuring
+# the contents of a Google Classroom email into
+# chunks, like the title, description, and due
+# date, to send as a Discord embed.
+
 email query: from:(classroom.google.com) newer_than:1d
+# The query that Qlassroom sends to Gmail to
+# fetch emails. This, along with your filtered
+# autoforwarding parameters, make sure Qlassroom
+# can only read new and public emails from
+# Google Classroom.
+
 refresh interval: 60
+# How frequently, in seconds, Qlassroom checks
+# Gmail and sends Discord messages.
+# Recommended range is between 1 (every second)
+# to 360 (every hour). Do it too much and you have
+# a chance of exceeding Gmail's usage limits. Do
+# it too infrequently, and you will have to
+# increase email query's newer_than parameter.

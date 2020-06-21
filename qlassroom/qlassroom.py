@@ -8,7 +8,7 @@ print_time('Imported everything.')
 async def background(discord_client):
 
 	await discord_client.wait_until_ready()
-	print_time('\033[92mLogged in as',str(discord_client.user))
+	print_success('Logged in as',str(discord_client.user))
 	while True:
 		last_refresh = time.time()
 		await handler()
@@ -21,9 +21,8 @@ async def handler():
 	email_ids = gmail.fetch_email_ids()
 
 	print_time(
-		'\033[93m'+
-		str(len(email_ids)),
-		'\033[94mnew emails'
+		'\033[90mNew emails:\033[0m',
+		str(len(email_ids))
 	)
 
 	if not email_ids: return True

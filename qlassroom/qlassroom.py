@@ -29,11 +29,17 @@ async def handler():
 	if not email_ids: return True
 
 	### Get channels	
-	
+	try:
+		channel_ids = config.read('channel ids')	
+	except TypeError:
+		print_error('No channels specified')
+		return False
+
+
 	channels = {
 		discord_client.get_channel(int(channel_id))
 		for channel_id
-		in config.read('channel ids')
+		in channel_ids 
 		if channel_id
 	}
 
@@ -122,12 +128,12 @@ async def send_email_to_channels(email_id,channels):
 	[	
 		print(
 			' '.join([
-				color_ribbon(id) for id in(
+				color_ribbon(str(id)) for id in [
 					''.join([str(ord(c)).zfill(2)[:2] for c in str(embed)[-17:-1]]),
 					message.id,
 					message.guild.id,
 					message.channel.id,
-				)
+				]
 			]),
 			'\033[0mSent post to '
 			f'\033[0mserver \033[1m{message.guild.name}',
@@ -140,7 +146,7 @@ async def send_email_to_channels(email_id,channels):
 		])
 	]
 	
-	cache.write(cache.read().union(email_id))
+	cache.write(cache.read().union({email_id}))
 
 	return True
 

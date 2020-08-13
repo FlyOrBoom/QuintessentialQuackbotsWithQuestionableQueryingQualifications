@@ -81,7 +81,7 @@ async def send_email_to_channels(email_id,channels):
 	try:
 		pattern = config.read('email pattern')
 		matches = [
-			match.replace('\n',' ')
+			( match.replace('\n',' ') if match else '' )
 			for match in
 			re.search(
 				pattern,
@@ -108,6 +108,7 @@ async def send_email_to_channels(email_id,channels):
 		}
 	except IndexError:
 		print_warning('Insufficient matches in pattern.')
+		print(matches)
 		return False
 
 	### Create embed

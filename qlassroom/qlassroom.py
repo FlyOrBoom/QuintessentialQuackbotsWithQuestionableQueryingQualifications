@@ -25,7 +25,7 @@ async def handler():
 		str(len(email_ids))
 	)
 
-	if not email_ids: return True
+	if not email_ids: return False 
 
 	### Get channels	
 	try:
@@ -43,7 +43,8 @@ async def handler():
 	}
 
 	if not channels:
-		print_warning('No channels specified.')
+		print_warning('No valid channels found.')
+		print(channel_ids)
 		return False
 
 	return await asyncio.gather(*[
@@ -61,6 +62,7 @@ async def send_email_to_channels(email_id,channels):
 		email_b64 = email_full['payload']['parts'][0]['body']['data']
 	except KeyError:
 		print_warning(f'Body data not found in email {email_id}.')
+		print(email_full)
 		return False
 
 	### Decode email
@@ -71,18 +73,25 @@ async def send_email_to_channels(email_id,channels):
 		).decode('utf-8').replace('\r','')
 	except AttributeError:
 		print_warning(f'Cannot decode email {email_id}.')
+		print(email_b64)
 		return False
 
 	### Find matches in email body
 	
 	try:
-		matches = re.search(
-			config.read('email pattern'),
-			email_text
-		).groups()
+		pattern = config.read('email pattern')
+		matches = [
+			match.replace('\n',' ')
+			for match in
+			re.search(
+				pattern,
+				email_text
+			).groups()
+		]
 	except AttributeError:
 		print_warning(f'Email {email_id} does not match pattern.')
-		return False
+		print(pattern,email_text)
+		return True
 
 	### Format matches
 
@@ -94,7 +103,7 @@ async def send_email_to_channels(email_id,channels):
 			'class_url': matches[3],
 			'due': matches[4],
 			'document': matches[5],
-			'description': matches[6].replace('\n',' '),
+			'description': matches[6],
 			'url': matches[7]
 		}
 	except IndexError:

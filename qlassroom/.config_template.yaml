@@ -6,7 +6,7 @@ channel ids:
 # right click the channel name, and 'Copy ID'.
 # Add them like the examples above (without the #).
 
-email pattern: '(.+) posted a (.+) in (.+)\n<(.+)>.\n\n(?:\[.*\n)?(?:Due: (.+)\n(.+)\n)?([\s\S]+)\nO.+[\n ]<(.+)>'
+email pattern: '\n([\s\S]+) posted a ([\s\S]+) in ([\s\S]+)<([\s\S]+)>.\n\n(?:\[.*\n)?(?:Due: (.+)\n(.+)\n)?([\s\S]+)?O.+[\n ]<(.+)'
 # A regular expression pattern for destructuring
 # the contents of a Google Classroom email into
 # chunks, like the title, description, and due
@@ -27,3 +27,4 @@ refresh interval: 60
 # a chance of exceeding Gmail's usage limits. Do
 # it too infrequently, and you will have to
 # increase email query's newer_than parameter.
+

@@ -80,14 +80,10 @@ async def send_email_to_channels(email_id,channels):
 	
 	try:
 		pattern = config.read('email pattern')
-		matches = [
-			( match.replace('\n',' ') if match else '' )
-			for match in
-			re.search(
-				pattern,
-				email_text
-			).groups()
-		]
+		matches = re.search(
+			pattern,
+			email_text
+		).groups()
 	except AttributeError:
 		print_warning(f'Email {email_id} does not match pattern.')
 		print(pattern,email_text)
@@ -97,14 +93,14 @@ async def send_email_to_channels(email_id,channels):
 
 	try:
 		post = {
-			'teacher': matches[0],
+			'teacher': matches[0].replace('\n',''),
 			'type':	matches[1].capitalize(),
-			'class': matches[2],
-			'class_url': matches[3],
-			'due': matches[4],
-			'document': matches[5],
+			'class': matches[2].replace('\n',''),
+			'class_url': matches[3].replace('\n',''),
+			'due': matches[4].replace('\n',''),
+			'document': matches[5].replace('\n',''),
 			'description': matches[6],
-			'url': matches[7]
+			'url': matches[7].replace('\n','')
 		}
 	except IndexError:
 		print_warning('Insufficient matches in pattern.')

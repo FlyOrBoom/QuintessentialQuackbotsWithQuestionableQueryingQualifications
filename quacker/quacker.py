@@ -16,7 +16,7 @@ async def on_message(message):
 	channel = message.channel
 	if (message.author != client.user
 		and any(trigger in channel.name for trigger in ['duck','quack','bot','spam'])
-		and any(trigger in message.content for trigger in [
+		and any(trigger in message.content.lower() for trigger in [
 			'duck','quack','you',
 			'what','how','when','should','hey',
 			'bug','problem','question','error','issue','warning','crash'])):

@@ -19,7 +19,7 @@ async def on_message(message):
 			page = str(int(match.groups()[0]))
 			async with channel.typing():
 				try:
-					await channel.send(file=discord.File('resources/leithold-'+page+'.png'))
+					await channel.send(file=discord.File('resources/leithold-'+page+'.jpg'))
 				except Exception:
 					await channel.send("I don't have that page!")
 

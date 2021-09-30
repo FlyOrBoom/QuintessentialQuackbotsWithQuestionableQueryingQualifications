@@ -18,6 +18,9 @@ async def on_message(message):
 		if match:
 			page = str(int(match.groups()[0]))
 			async with channel.typing():
-				await channel.send(file=discord.File('resources/leithold-'+page+'.png'))
+				try:
+					await channel.send(file=discord.File('resources/leithold-'+page+'.png'))
+				except Exception:
+					await channel.send("I don't have that page!")
 
 client.run(os.environ['TOKEN'])

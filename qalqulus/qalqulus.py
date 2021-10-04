@@ -17,10 +17,9 @@ async def on_message(message):
 		match = re.match(r'\!leithold (\d+)', message.content.lower())
 		if match:
 			page = str(int(match.groups()[0]))
-			async with channel.typing():
-				try:
-					await channel.send(file=discord.File('resources/leithold-'+page+'.jpg'))
-				except Exception:
-					await channel.send("I don't have that page!")
+			try:
+				await channel.send(file=discord.File('resources/leithold-'+page+'.jpg'))
+			except Exception:
+				await channel.send("I don't have that page!")
 
 client.run(os.environ['TOKEN'])

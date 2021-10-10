@@ -20,7 +20,7 @@ async def on_message(message):
 
 	if message.author != client.user:
 		# match messages in the form of "!textbook_name page_# optional_problem_#"
-		match = re.match(r'\!betaleithold (\d+) ?(\d+)?', message.content.lower())
+		match = re.match(r'\!betaleithold *(\d+) *(\d+)?', message.content.lower())
 
 		if match:
 			page, problem = match.groups()

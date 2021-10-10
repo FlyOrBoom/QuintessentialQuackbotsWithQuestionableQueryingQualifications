@@ -1,9 +1,7 @@
 cd staging
-find . -type f -name 'leithold-4-*' | while read FILE ; do
-	n=$(echo ${FILE})
-	n=${n: -7: 3}
-	n=$(echo $n | sed 's/^0*//')
-	n=$(($n + 312))
-	mv "${FILE}" "leithold-$n.jpg"
+ITER=64
+find . -type f -name '*' | while read FILE ; do
+	let ITER=${ITER}-1
+	mv "${FILE}" "leithold-n-$ITER.jpg"
 done
 cd ..

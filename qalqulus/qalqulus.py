@@ -33,7 +33,7 @@ async def on_message(message):
 
 				a = problem_loc(problem - 1, page) or (0,0)
 				b = problem_loc(problem + 0, page) or (0,0)
-				c = problem_loc(problem + 1, page) or (10000, 10000)
+				c = problem_loc(problem + 1, page) or (1500, 2000)
 
 				top = min(a[1], b[1]) + 64
 				bottom = max(b[1] + 200, c[1])
